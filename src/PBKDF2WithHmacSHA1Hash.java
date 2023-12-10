@@ -7,13 +7,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
 // Password Base Key Derivation Function 2 Hash Massage Authentication Code With Secure Hash Algorithm 1
-public class PBKDF2 {
+public class PBKDF2WithHmacSHA1Hash {
 
     public static void main(String[] args) throws NoSuchAlgorithmException {
         String password = "password";
-        // byte[] salt = getSalt();
-        // int iterationCount = 1; // Adjust according to your security requirements
-        // int keyLength = 256; // Key length in bits
 
         try {
             String hashedPassword = generatePBKDF2Hash(password);
@@ -31,10 +28,10 @@ public class PBKDF2 {
         int keyLength = 256;
         char[] passwordChars = password.toCharArray();
 
-        KeySpec spec = new PBEKeySpec(passwordChars, salt, iterationCount, keyLength);
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        KeySpec keySpec = new PBEKeySpec(passwordChars, salt, iterationCount, keyLength);
+        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
 
-        byte[] hashBytes = factory.generateSecret(spec).getEncoded();
+        byte[] hashBytes = secretKeyFactory.generateSecret(keySpec).getEncoded();
 
         // Convert the salt and hash to hexadecimal strings
         String hexSalt = toHex(salt);

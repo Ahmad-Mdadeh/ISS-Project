@@ -9,7 +9,7 @@ public class VerifyingPasswords {
             throws NoSuchAlgorithmException, InvalidKeySpecException {
         String originalPassword = "password";
 
-        String generatedSecuredPasswordHash = PBKDF2.generatePBKDF2Hash(originalPassword);
+        String generatedSecuredPasswordHash = PBKDF2WithHmacSHA1Hash.generatePBKDF2Hash(originalPassword);
         System.out.println(generatedSecuredPasswordHash);
 
         boolean matched = validatePassword("password", generatedSecuredPasswordHash);
@@ -22,7 +22,7 @@ public class VerifyingPasswords {
     public static String hashedPassword(String pass) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String originalPassword = pass;
 
-        String generatedSecuredPasswordHash = PBKDF2.generatePBKDF2Hash(originalPassword);
+        String generatedSecuredPasswordHash = PBKDF2WithHmacSHA1Hash.generatePBKDF2Hash(originalPassword);
         System.out.println(generatedSecuredPasswordHash);
 
         return generatedSecuredPasswordHash;

@@ -27,7 +27,6 @@ class Client {
 			// PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
 			// reading from server
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			// object of scanner class
 
@@ -76,12 +75,22 @@ class Client {
 					request.add(p);
 				}
 
+				try {
+					String response = "";
+					ArrayList<String> EncryptedRequest = new ArrayList<String>();
+					BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+					
+					
+					System.out.println("Server replied ===> " + in.readLine());
+
+				} catch (Exception exception) {
+
+				}
 				// sending the user input to server
 				objectOut.writeObject(request);
 				objectOut.flush();
 
 				// displaying server reply
-				System.out.println("Server replied ===> " + in.readLine());
 
 			}
 
