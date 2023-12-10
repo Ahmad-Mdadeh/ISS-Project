@@ -1,6 +1,6 @@
 
 
-/*
+
  * // Function to encrypt a string using AES
     private static String encryptAES(String plainText, SecretKey secretKey) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
@@ -17,4 +17,4 @@
         byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
         return new String(decryptedBytes);
     }
- */
+ 
