@@ -1,15 +1,21 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import javax.crypto.SecretKey;
+import javax.xml.bind.DatatypeConverter;
 
 // Client class 
 class Client {
 	private ObjectOutputStream objectOut = null;
 	private Socket socket = null;
 	private Scanner sc = null;
+	String EncryptType = "";
+	byte[] nonce = new byte[32];
+	SecretKey symmetricKey;
 
 	// driver code
 	public Client(String address, int port) {
+		boolean check = false;
 
 		try {
 
@@ -20,8 +26,14 @@ class Client {
 			sc = new Scanner(System.in);
 			// opening output stream on the socket
 			objectOut = new ObjectOutputStream(socket.getOutputStream());
+			PrintStream printStream = new PrintStream(socket.getOutputStream());
 
-			// ArrayList<String> User_request = new ArrayList<String>();
+			System.out
+					.println("Enter   0 for no Encryption\n\t1 for symmetric Encryption\n\t2 for Asymmetric Encryption");
+			this.EncryptType = sc.nextLine();
+			printStream.println(this.EncryptType);
+
+			// ArrayList<String> request = new ArrayList<String>();
 
 			// writing to server
 			// PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -30,7 +42,7 @@ class Client {
 
 			// object of scanner class
 
-			while (true) {
+			while (!check) {
 				ArrayList<String> request = new ArrayList<String>();
 
 				System.out.println(
@@ -77,18 +89,30 @@ class Client {
 
 				try {
 					String response = "";
+
 					ArrayList<String> EncryptedRequest = new ArrayList<String>();
 					BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-					
-					
-					System.out.println("Server replied ===> " + in.readLine());
+
+					if (this.EncryptType.equals("1")) {
+
+						symmetricKey = Symmetric.createAESKey("03150040010");
+						System.out.println("The Symmetric Key is :"
+								+ DatatypeConverter.printHexBinary(
+										symmetricKey.getEncoded()));
+						EncryptedRequest = Symmetric.encryptAES(request, symmetricKey);
+						System.out.println("_______________________ :" + EncryptedRequest.get(0));
+						objectOut.writeObject(EncryptedRequest);
+						// get plain response
+						response = in.readLine();
+						System.out.println("Server replied ===> " + response);
+					}
 
 				} catch (Exception exception) {
 
 				}
 				// sending the user input to server
-				objectOut.writeObject(request);
-				objectOut.flush();
+				// objectOut.writeObject(request);
+				// objectOut.flush();
 
 				// displaying server reply
 

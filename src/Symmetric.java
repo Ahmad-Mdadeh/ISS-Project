@@ -5,6 +5,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import java.security.spec.KeySpec;
+import java.util.ArrayList;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -35,20 +36,34 @@ public class Symmetric {
     }
 
     // Function to encrypt a string using AES
-    private static String encryptAES(String plainText, SecretKey secretKey) throws Exception {
+    static ArrayList<String> encryptAES(ArrayList<String> plainText, SecretKey secretKey) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] encryptedBytes = cipher.doFinal(plainText.getBytes());
-        return DatatypeConverter.printHexBinary(encryptedBytes);
+
+        ArrayList<String> encryptedTextList = new ArrayList<>();
+
+        for (String text : plainText) {
+            byte[] encryptedBytes = cipher.doFinal(text.getBytes());
+            encryptedTextList.add(DatatypeConverter.printHexBinary(encryptedBytes));
+        }
+
+        return encryptedTextList;
     }
 
     // Function to decrypt an AES-encrypted string
-    private static String decryptAES(String encryptedText, SecretKey secretKey) throws Exception {
+    static ArrayList<String> decryptAES(ArrayList<String> encryptedTextList, SecretKey secretKey) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        byte[] encryptedBytes = DatatypeConverter.parseHexBinary(encryptedText);
-        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-        return new String(decryptedBytes);
+
+        ArrayList<String> decryptedTextList = new ArrayList<>();
+
+        for (String encryptedText : encryptedTextList) {
+            byte[] encryptedBytes = DatatypeConverter.parseHexBinary(encryptedText);
+            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+            decryptedTextList.add(new String(decryptedBytes));
+        }
+
+        return decryptedTextList;
     }
 
     public static void main(String[] args) {
@@ -59,10 +74,11 @@ public class Symmetric {
             // Optional: Print the key in hexadecimal format
             System.out.println(
                     "Generated Key (Hex): " + javax.xml.bind.DatatypeConverter.printHexBinary(key.getEncoded()));
-            System.out.println("=======================");
-            System.out.println(encryptAES("TEST", key));
-            System.out.println("+++++++++++++++++++++++");
-            System.out.println(decryptAES("TEST", key));
+            // System.out.println("=======================");
+            // ArrayList<String> s = encryptAES("TEST", key);
+            // System.out.println(s);
+            // System.out.println("+++++++++++++++++++++++");
+            // System.out.println(decryptAES(s, key));
         } catch (Exception e) {
             e.printStackTrace();
         }

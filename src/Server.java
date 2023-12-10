@@ -50,6 +50,7 @@ class Server {
 	// ClientHandler class
 	private static class ClientHandler implements Runnable {
 		private final Socket clientSocket;
+		String EncryptType = "";
 
 		// Constructor
 		public ClientHandler(Socket socket) {
@@ -67,20 +68,29 @@ class Server {
 				PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
 				// get the inputstream of client
 				inObj = new ObjectInputStream(clientSocket.getInputStream());
+				BufferedReader EncryptTypeIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+				this.EncryptType = EncryptTypeIn.readLine();
 
 				while (true) {
 					// writing the received message from
 					// client
 					System.out.println("new request");
 
-					ArrayList<String> received = new ArrayList<>();
+					ArrayList<String> received, decrypt = new ArrayList<>();
 
 					received = (ArrayList<String>) inObj.readObject();
-					
-					// To Choose the Operation login or signUp
-					Operation operation = new Operation(received);
+
+					Operation operation = new Operation();
+					// Decrypt the Received
+					if (this.EncryptType.equals("1")) {
+						decrypt = Operation.decrypt(received);
+						
+					}
+
+					operation.getRequest(decrypt);
 					res = operation.Auth();
-					
+
 					String[] resParts = res.split("! ");
 					printStream.println(resParts[0]);
 					System.out.println(resParts[1]);
@@ -88,6 +98,8 @@ class Server {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 
