@@ -1,0 +1,97 @@
+import java.io.*;
+import java.net.*;
+import java.util.ArrayList;
+
+// Server class 
+class Server {
+	public static void main(String[] args) {
+		ServerSocket server = null;
+
+		try {
+
+			// server is listening on port 1234
+			server = new ServerSocket(1234);
+			server.setReuseAddress(true);
+
+			// running infinite loop for getting
+			// client request
+			while (true) {
+
+				// socket object to receive incoming client
+				// requests
+				Socket client = server.accept();
+
+				// Displaying that new client is connected
+				// to server
+				System.out.println("New client connected : "
+						+ client.getInetAddress()
+								.getHostAddress());
+
+				// create a new thread object
+				ClientHandler clientSock = new ClientHandler(client);
+
+				// This thread will handle the client
+				// separately
+				new Thread(clientSock).start();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (server != null) {
+				try {
+					server.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	// ClientHandler class
+	private static class ClientHandler implements Runnable {
+		private final Socket clientSocket;
+
+		// Constructor
+		public ClientHandler(Socket socket) {
+			this.clientSocket = socket;
+		}
+
+		public void run() {
+			OutputStream outObj = null;
+			ObjectInputStream inObj = null;
+
+			try {
+				String res = "";
+				// get the outputstream of client
+				outObj = clientSocket.getOutputStream();
+				PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
+				// get the inputstream of client
+				inObj = new ObjectInputStream(clientSocket.getInputStream());
+
+				while (true) {
+					// writing the received message from
+					// client
+					System.out.println("new request");
+
+					ArrayList<String> received = new ArrayList<>();
+
+					received = (ArrayList<String>) inObj.readObject();
+					
+					// To Choose the Operation login or signUp
+					Operation operation = new Operation(received);
+					res = operation.Auth();
+					
+					String[] resParts = res.split("! ");
+					printStream.println(resParts[0]);
+					System.out.println(resParts[1]);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			} finally {
+
+			}
+		}
+	}
+}
