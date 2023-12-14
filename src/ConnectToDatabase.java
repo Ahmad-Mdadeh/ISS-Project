@@ -3,6 +3,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 
 public class ConnectToDatabase {
+    static int id = 0;
+
     // function connect to DataBase
     public Connection connect() {
         String MySQLURL = "jdbc:mysql://127.0.0.1:3306/iss";
@@ -45,6 +47,35 @@ public class ConnectToDatabase {
         return result;
     }
 
+    public String login(String name, String pass) {
+
+        try (Connection connection = this.connect();
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM `user` WHERE name=?")) {
+
+            statement.setString(1, name);
+
+            try (ResultSet user = statement.executeQuery()) {
+                if (user.next()) {
+                    id = user.getInt("id");
+                    if (VerifyingPasswords.validatePassword(pass, user.getString("pass"))) {
+                        return "Login Successful !!! " + user.getInt("id") + " : " + user.getString("name");
+                    } else {
+                        return "Wrong Password";
+                    }
+                } else {
+                    return "User not found";
+                }
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                e.printStackTrace(); // Handle the exception appropriately
+                return "Login failed due to an unexpected error.";
+            }
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace(); // Handle the exception appropriately
+            return "Connection error";
+        }
+    }
+
     public String Signup(String name, String pass) {
         Statement stmtement = null;
         Connection connection = this.connect();
@@ -75,35 +106,46 @@ public class ConnectToDatabase {
             }
             return "SignUp Successful !!! " + id;
         }
-        return "connection error";
+        return "connection error !!! ";
     }
 
-    public String Login(String name, String pass) {
-        Statement stmtement = null;
-        Connection connection = this.connect();
-        if (connection != null) {
-            try {
-                stmtement = (Statement) connection.createStatement();
+    public String updateInformation(String newPhone, String newAddress, String newAge) {
+        try (Connection connection = this.connect();
+                PreparedStatement updateStatement = connection.prepareStatement(
+                        "UPDATE user SET phone=?, address=?, age=? WHERE id=?");
+                PreparedStatement selectStatement = connection.prepareStatement(
+                        "SELECT * FROM `user` WHERE id=?")) {
 
-                ResultSet user = stmtement.executeQuery("SELECT * FROM `user` WHERE name=\"" + name + "\" ");
-                if (user.next()) {
-                    // System.out.println(pass + " " + user.getString("password"));
-                    if (VerifyingPasswords.validatePassword(pass, user.getString("pass")))
-                        return "Login Successful !!! " + user.getInt("id") + " : " + user.getString("name");
-                    else
-                        return "Wrong Password ";
-                } else
-                    return "user not found ";
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+            // Update user information
+            updateStatement.setString(1, newPhone);
+            updateStatement.setString(2, newAddress);
+            updateStatement.setString(3, newAge);
+            updateStatement.setInt(4, id);
 
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (InvalidKeySpecException e) {
-                e.printStackTrace();
+            int affectedRows = updateStatement.executeUpdate();
+
+            if (affectedRows > 0) {
+                // If update was successful, retrieve updated user information
+                selectStatement.setInt(1, id);
+                try (ResultSet updatedUser = selectStatement.executeQuery()) {
+                    if (updatedUser.next()) {
+                        return "Update Information Successful !!! " + "id : " + id +
+                                ", Name : " + updatedUser.getString("name") +
+                                ", Phone : " + updatedUser.getString("phone") +
+                                ", Address : " + updatedUser.getString("address") +
+                                ", Age : " + updatedUser.getString("age");
+                    } else {
+                        return "No user found with ID: " + id;
+                    }
+                }
+            } else {
+                return "No user found with ID: " + id;
             }
-        }
 
-        return "connection error";
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+            return "Update Information failed !!! " + "id : " + id;
+        }
     }
+
 } // class ends

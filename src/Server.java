@@ -62,7 +62,7 @@ class Server {
 			ObjectInputStream inObj = null;
 
 			try {
-				String res = "";
+				// String res = "";
 				// get the outputstream of client
 				outObj = clientSocket.getOutputStream();
 				PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
@@ -78,6 +78,7 @@ class Server {
 					System.out.println("new request");
 
 					ArrayList<String> received, decrypt = new ArrayList<>();
+					ArrayList<String> encryptResponse = new ArrayList<>();
 
 					received = (ArrayList<String>) inObj.readObject();
 
@@ -85,15 +86,19 @@ class Server {
 					// Decrypt the Received
 					if (this.EncryptType.equals("1")) {
 						decrypt = Operation.decrypt(received);
-						
 					}
 
 					operation.getRequest(decrypt);
-					res = operation.Auth();
-
-					String[] resParts = res.split("! ");
-					printStream.println(resParts[0]);
-					System.out.println(resParts[1]);
+					encryptResponse.add(operation.auth());
+					if (encryptResponse.get(0).contains("!!!")) {
+						String[] resParts = encryptResponse.get(0).split("! ");
+						encryptResponse.add(resParts[0]);
+						printStream.println(encryptResponse.get(1));
+						System.out.println(resParts[1]);
+					} else {
+						printStream.println(encryptResponse.get(0));
+						System.out.println(encryptResponse.get(0));
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
