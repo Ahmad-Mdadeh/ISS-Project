@@ -31,7 +31,7 @@ public class ConnectToDatabase {
         String result = "error";
         try (
                 PreparedStatement preparedStatement = connection
-                        .prepareStatement("SELECT * FROM `user` WHERE name=?")) {
+                        .prepareStatement("SELECT * FROM `users` WHERE name=?")) {
 
             preparedStatement.setString(1, name);
             ResultSet user = preparedStatement.executeQuery();
@@ -50,14 +50,14 @@ public class ConnectToDatabase {
     public String login(String name, String pass) {
 
         try (Connection connection = this.connect();
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM `user` WHERE name=?")) {
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM `users` WHERE name=?")) {
 
             statement.setString(1, name);
 
             try (ResultSet user = statement.executeQuery()) {
                 if (user.next()) {
-                    id = user.getInt("id");
                     if (VerifyingPasswords.validatePassword(pass, user.getString("pass"))) {
+                        id = user.getInt("id");
                         return "Login Successful !!! " + user.getInt("id") + " : " + user.getString("name");
                     } else {
                         return "Wrong Password";
@@ -79,22 +79,20 @@ public class ConnectToDatabase {
     public String Signup(String name, String pass) {
         Statement stmtement = null;
         Connection connection = this.connect();
-        String id = "-1";
         if (connection != null) {
             try {
                 String availability = username(name, connection);
                 if (!availability.equals("Username available")) {
                     return availability;
                 }
-
                 pass = VerifyingPasswords.hashedPassword(pass);
                 stmtement = (Statement) connection.createStatement();
                 stmtement.executeUpdate(
-                        "INSERT INTO user (name,pass) VALUES ( '" + name + "','" + pass + "')",
+                        "INSERT INTO users (name,pass) VALUES ( '" + name + "','" + pass + "')",
                         Statement.RETURN_GENERATED_KEYS);
                 ResultSet rs = stmtement.getGeneratedKeys();
                 if (rs.next()) {
-                    id = rs.getInt(1) + " : " + name;
+                    id = rs.getInt(1);
                 }
 
             } catch (SQLException throwable) {
@@ -112,9 +110,9 @@ public class ConnectToDatabase {
     public String updateInformation(String newPhone, String newAddress, String newAge) {
         try (Connection connection = this.connect();
                 PreparedStatement updateStatement = connection.prepareStatement(
-                        "UPDATE user SET phone=?, address=?, age=? WHERE id=?");
+                        "UPDATE users SET phone=?, address=?, age=? WHERE id=?");
                 PreparedStatement selectStatement = connection.prepareStatement(
-                        "SELECT * FROM `user` WHERE id=?")) {
+                        "SELECT * FROM `users` WHERE id=?")) {
 
             // Update user information
             updateStatement.setString(1, newPhone);

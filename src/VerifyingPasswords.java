@@ -40,7 +40,7 @@ public class VerifyingPasswords {
         PBEKeySpec spec = new PBEKeySpec(originalPassword.toCharArray(),
                 salt, iterations, hash.length * 8);
 
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
         byte[] hashBytes = factory.generateSecret(spec).getEncoded();
 
         int diff = hash.length ^ hashBytes.length;

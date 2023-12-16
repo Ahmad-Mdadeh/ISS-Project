@@ -1,6 +1,7 @@
 
 import java.io.*;
 import java.net.*;
+import java.security.PublicKey;
 import java.util.*;
 import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
@@ -8,6 +9,7 @@ import javax.xml.bind.DatatypeConverter;
 // Client class
 class Client {
 	private ObjectOutputStream objectOut = null;
+	private ObjectInputStream objectIn = null;
 	private Socket socket = null;
 	private Scanner sc = null;
 	String EncryptType = "";
@@ -29,6 +31,8 @@ class Client {
 
 			// opening output stream on the socket
 			objectOut = new ObjectOutputStream(socket.getOutputStream());
+			objectIn = new ObjectInputStream(socket.getInputStream());
+
 			PrintStream printStream = new PrintStream(socket.getOutputStream());
 
 			System.out
@@ -36,6 +40,14 @@ class Client {
 			System.out.print(
 					"Your Option : ");
 			this.EncryptType = sc.nextLine();
+			if (this.EncryptType.equals("2")) {
+				PublicKey publicKeyFromServer = (PublicKey) objectIn.readObject();
+				System.out.println(
+						"The Public Key From Server is: "
+								+ DatatypeConverter.printHexBinary(publicKeyFromServer.getEncoded()));
+				System.out.println(
+						"----------------------------------------------------------------------------------------------------------------------------");
+			}
 			printStream.println(this.EncryptType);
 
 			// Auth
@@ -105,16 +117,16 @@ class Client {
 
 						symmetricKey = Symmetric.createAESKey("03150040010");
 						System.out.println(
-								"-------------------------------------------------------------------------------------------------------------------------------------------");
+								"----------------------------------------------------------------------------------------------------------------------------");
 						System.out.println("The Symmetric Key is : "
 								+ DatatypeConverter.printHexBinary(
 										symmetricKey.getEncoded()));
 						EncryptedRequest = Symmetric.encryptAES(request, symmetricKey);
 						System.out.println(
-								"-------------------------------------------------------------------------------------------------------------------------------------------");
+								"----------------------------------------------------------------------------------------------------------------------------");
 						System.out.println("request sent !!");
 						System.out.println(
-								"-------------------------------------------------------------------------------------------------------------------------------------------");
+								"----------------------------------------------------------------------------------------------------------------------------");
 						objectOut.writeObject(EncryptedRequest);
 						// get plain response
 						response = in.readLine();
@@ -131,7 +143,7 @@ class Client {
 			}
 
 			System.out.println(
-					"-------------------------------------------------------------------------------------------------------------------------------------------");
+					"----------------------------------------------------------------------------------------------------------------------------");
 			System.out.println();
 
 			// Information
@@ -160,23 +172,27 @@ class Client {
 
 						symmetricKey = Symmetric.createAESKey("03150040010");
 						System.out.println(
-								"-------------------------------------------------------------------------------------------------------------------------------------------");
+								"----------------------------------------------------------------------------------------------------------------------------");
 						System.out.println("The Symmetric Key is : "
 								+ DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
 						EncryptedRequest = Symmetric.encryptAES(request, symmetricKey);
 						System.out.println(EncryptedRequest.get(1));
 						System.out.println(
-								"-------------------------------------------------------------------------------------------------------------------------------------------");
+								"----------------------------------------------------------------------------------------------------------------------------");
 						System.out.println("request sent !! ");
 						System.out.println(
-								"-------------------------------------------------------------------------------------------------------------------------------------------");
+								"----------------------------------------------------------------------------------------------------------------------------");
 						objectOut.writeObject(EncryptedRequest);
 						// get plain response
 						response = in.readLine();
 						System.out.println("Server replied ===> " + response);
 						System.out.println(
-								"-------------------------------------------------------------------------------------------------------------------------------------------");
+								"----------------------------------------------------------------------------------------------------------------------------");
 
+					}
+
+					if (response.contains("Successful")) {
+						check = false;
 					}
 				} catch (Exception exception) {
 				}
@@ -184,6 +200,9 @@ class Client {
 			}
 
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println(" Connection Terminated !! ");

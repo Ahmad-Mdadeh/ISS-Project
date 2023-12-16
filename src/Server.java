@@ -1,9 +1,15 @@
 import java.io.*;
 import java.net.*;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.ArrayList;
+
+import javax.xml.bind.DatatypeConverter;
 
 // Server class 
 class Server {
+	static KeyPair keypair;
+
 	public static void main(String[] args) {
 		ServerSocket server = null;
 
@@ -13,6 +19,19 @@ class Server {
 			server = new ServerSocket(1234);
 			server.setReuseAddress(true);
 
+			// create keys to server
+
+			keypair = Hyper.generateKeyPair();
+			System.out.println(
+					"The Public Key is: "
+							+ DatatypeConverter.printHexBinary(
+									keypair.getPublic().getEncoded()));
+			System.out.println(
+					"----------------------------------------------------------------------------------------------------------------------------");
+			System.out.println(
+					"The Private Key is: "
+							+ DatatypeConverter.printHexBinary(
+									keypair.getPrivate().getEncoded()));
 			// running infinite loop for getting
 			// client request
 			while (true) {
@@ -35,6 +54,9 @@ class Server {
 				new Thread(clientSock).start();
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			if (server != null) {
@@ -60,45 +82,56 @@ class Server {
 		public void run() {
 			OutputStream outObj = null;
 			ObjectInputStream inObj = null;
-
+			BufferedReader EncryptTypeIn = null;
+			PrintWriter printWriterOut = null;
+			ObjectOutputStream ObjectdataOut = null;
+			PrintStream printStream = null;
 			try {
-				// String res = "";
-				// get the outputstream of client
-				outObj = clientSocket.getOutputStream();
-				PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
-				// get the inputstream of client
-				inObj = new ObjectInputStream(clientSocket.getInputStream());
-				BufferedReader EncryptTypeIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
+				String response = "";
+				ArrayList<String> received, decrypt = new ArrayList<>();
 				this.EncryptType = EncryptTypeIn.readLine();
 
+				// get the outputstream of client
+				outObj = clientSocket.getOutputStream();
+				ObjectdataOut = new ObjectOutputStream(outObj);
+				inObj = new ObjectInputStream(clientSocket.getInputStream());
+				EncryptTypeIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+				printWriterOut = new PrintWriter(clientSocket.getOutputStream(), true);
+				printStream = new PrintStream(outObj);
+
+				if (this.EncryptType.equals("2")) {
+					// Send Serve public Key
+					PublicKey publicKey = keypair.getPublic();
+					ObjectdataOut.writeObject(publicKey);
+
+				}
 				while (true) {
 					// writing the received message from
 					// client
 					System.out.println("new request");
 
-					ArrayList<String> received, decrypt = new ArrayList<>();
-					ArrayList<String> encryptResponse = new ArrayList<>();
-
 					received = (ArrayList<String>) inObj.readObject();
-
 					Operation operation = new Operation();
+
 					// Decrypt the Received
 					if (this.EncryptType.equals("1")) {
 						decrypt = Operation.decrypt(received);
 					}
 
 					operation.getRequest(decrypt);
-					encryptResponse.add(operation.auth());
-					if (encryptResponse.get(0).contains("!!!")) {
-						String[] resParts = encryptResponse.get(0).split("! ");
-						encryptResponse.add(resParts[0]);
-						printStream.println(encryptResponse.get(1));
+					response = operation.auth();
+					if (response.contains("Successful")) {
+						String[] resParts = response.split("! ");
+						printStream.println(resParts[0]);
 						System.out.println(resParts[1]);
 					} else {
-						printStream.println(encryptResponse.get(0));
-						System.out.println(encryptResponse.get(0));
+
+						System.out.println(received + " " + decrypt);
+						printStream.println(response);
+						System.out.println(response);
 					}
+					received.clear();
+					decrypt.clear();
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
