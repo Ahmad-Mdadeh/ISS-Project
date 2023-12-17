@@ -3,7 +3,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 
 public class ConnectToDatabase {
-    static int id = 0;
+    public static int id = 0;
+    public static String permissions = "";
+    public static String nationalNumber = "";
 
     // function connect to DataBase
     public Connection connect() {
@@ -47,7 +49,25 @@ public class ConnectToDatabase {
         return result;
     }
 
-    public String login(String name, String pass) {
+    public String checkPermissions(int id, Connection connection) {
+        String permissions = "";
+        try (
+                PreparedStatement preparedStatement = connection
+                        .prepareStatement("SELECT * FROM `users` WHERE id=?")) {
+
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                permissions = resultSet.getString("permissions");
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        System.out.println(permissions);
+        return permissions;
+    }
+
+    public String login(String name, String pass, String nationalNumber) {
 
         try (Connection connection = this.connect();
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM `users` WHERE name=?")) {
@@ -58,7 +78,9 @@ public class ConnectToDatabase {
                 if (user.next()) {
                     if (VerifyingPasswords.validatePassword(pass, user.getString("pass"))) {
                         id = user.getInt("id");
-                        return "Login Successful !!! " + user.getInt("id") + " : " + user.getString("name");
+                        nationalNumber = user.getString("nationalNumber");
+                        permissions = user.getString("permissions");
+                        return "Login Successful !!! " + permissions + "! " +user.getInt("id") + " : " + user.getString("name");
                     } else {
                         return "Wrong Password";
                     }
@@ -76,44 +98,47 @@ public class ConnectToDatabase {
         }
     }
 
-    public String signup(String name, String pass) {
-        try (Connection connection = connect()) {
-            if (connection != null) {
-                String availability = username(name, connection);
-                if (!availability.equals("Username available")) {
-                    return availability;
-                }
+    public String signup(String name, String pass, String nationalNumber) {
+        if (checkPermissions(id, this.connect()).equals("0")) {
+            try (Connection connection = this.connect()) {
+                if (connection != null) {
+                    String availability = username(name, connection);
+                    if (!availability.equals("Username available")) {
+                        return availability;
+                    }
 
-                pass = VerifyingPasswords.hashedPassword(pass);
-                // Use PreparedStatement to prevent SQL injection
-                String insertQuery = "INSERT INTO users (name, pass) VALUES (?, ?)";
-                try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery,
-                        Statement.RETURN_GENERATED_KEYS)) {
-                    preparedStatement.setString(1, name);
-                    preparedStatement.setString(2, pass);
+                    pass = VerifyingPasswords.hashedPassword(pass);
+                    // Use PreparedStatement to prevent SQL injection
+                    String insertQuery = "INSERT INTO users (name, pass) VALUES (?, ?)";
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery,
+                            Statement.RETURN_GENERATED_KEYS)) {
+                        preparedStatement.setString(1, name);
+                        preparedStatement.setString(2, pass);
 
-                    preparedStatement.executeUpdate();
+                        preparedStatement.executeUpdate();
 
-                    try (ResultSet rs = preparedStatement.getGeneratedKeys()) {
-                        if (rs.next()) {
-                            id = rs.getInt(1);
+                        try (ResultSet rs = preparedStatement.getGeneratedKeys()) {
+                            if (rs.next()) {
+                                id = rs.getInt(1);
+                            }
                         }
                     }
-                }
 
-                return "SignUp Successful !!! " + id;
+                    return "SignUp Successful !!! " + id;
+                }
+                return "Connection error !!! ";
+            } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                e.printStackTrace();
+                return "SignUp failed due to an unexpected error.";
             }
-            return "Connection error !!! ";
-        } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            e.printStackTrace();
-            return "SignUp failed due to an unexpected error.";
         }
+        return "Not Permissions";
     }
 
-    public String updateInformation(String newPhone, String newAddress, String newAge) {
+    public String updateInformation(String newPhone, String newAddress, String newAge, String nationalNumber) {
         try (Connection connection = this.connect();
                 PreparedStatement updateStatement = connection.prepareStatement(
-                        "UPDATE users SET phone=?, address=?, age=? WHERE id=?");
+                        "UPDATE users SET phone=?, address=?, age=?, nationalNumber=? WHERE id=?");
                 PreparedStatement selectStatement = connection.prepareStatement(
                         "SELECT * FROM `users` WHERE id=?")) {
 
@@ -121,7 +146,8 @@ public class ConnectToDatabase {
             updateStatement.setString(1, newPhone);
             updateStatement.setString(2, newAddress);
             updateStatement.setString(3, newAge);
-            updateStatement.setInt(4, id);
+            updateStatement.setString(4, nationalNumber);
+            updateStatement.setInt(5, id);
 
             int affectedRows = updateStatement.executeUpdate();
 
@@ -134,7 +160,8 @@ public class ConnectToDatabase {
                                 ", Name : " + updatedUser.getString("name") +
                                 ", Phone : " + updatedUser.getString("phone") +
                                 ", Address : " + updatedUser.getString("address") +
-                                ", Age : " + updatedUser.getString("age");
+                                ", Age : " + updatedUser.getString("age") +
+                                ", nationalNumber : " + updatedUser.getString("nationalNumber");
                     } else {
                         return "No user found with ID: " + id;
                     }
@@ -149,4 +176,4 @@ public class ConnectToDatabase {
         }
     }
 
-} 
+}

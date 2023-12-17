@@ -16,10 +16,12 @@ class Client {
 	SecretKey symmetricKey;
 	PublicKey publicKeyFromServer = null;
 	byte[] EncryptedSessionKey = null;
+	String permissions = "";
 
 	// driver code
 	public Client(String address, int port) {
 		boolean check = false;
+
 		PrintWriter printWriterOut = null;
 		try {
 
@@ -77,110 +79,8 @@ class Client {
 
 			// Auth
 			while (!check) {
-				ArrayList<String> request = new ArrayList<String>();
-				System.out.println(
-						"----------------------------------------------------------------------------------------------------------------------------");
-				System.out.println(
-						"Enter:  E or e to exit.\n\tL or l to login.\n\tS or s to signup.");
-				System.out.print(
-						"Your Option : ");
-				String tmp = sc.nextLine();
-				String input;
-				while (!(tmp.equals("E") || tmp.equals("e")
-						|| tmp.equals("L") || tmp.equals("l")
-						|| tmp.equals("S") || tmp.equals("s"))) {
-					System.out.print(
-							"Please Try again : ");
-					tmp = sc.nextLine();
-				}
-				System.out.println(
-						"----------------------------------------------------------------------------------------------------------------------------");
-				switch (tmp) {
-					case "E":
-					case "e":
-						input = "exit";
-						break;
-					case "L":
-					case "l":
-						input = "login";
-						break;
-					case "S":
-					case "s":
-						input = "signup";
-						break;
-					default:
-						input = "";
-				}
-				if (input.equals("exit")) {
-					break;
-				} else if (input.equals("login")) {
-					System.out.println("Please Enter User Name And Password :");
-					request.add("login");
-					System.out.print("User Name : ");
-					request.add(sc.nextLine());
-					System.out.print("Password : ");
-					request.add(sc.nextLine());
-				} else if (input.equals("signup")) {
-					System.out.println("Please Enter User Name And Password :");
-					request.add("signup");
-					System.out.print("User Name : ");
-					request.add(sc.nextLine());
-					System.out.print("Password : ");
-					String p = sc.nextLine();
-					while (p.length() < 8) {
-						System.out.println(" Please Retype Password Of 8 Char At Least.");
-						System.out.print("Password : ");
-						p = sc.nextLine();
-					}
-					request.add(p);
-				}
-
-				try {
-					String response = "";
-
-					ArrayList<String> EncryptedRequest = new ArrayList<String>();
-					BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-					if (this.EncryptType.equals("0")) {
-
-						objectOut.writeObject(request);
-						response = in.readLine();
-						System.out.println("Server replied ===> " + response);
-
-					} else if (this.EncryptType.equals("1")) {
-
-						symmetricKey = Symmetric.createAESKey("03150040010");
-						System.out.println(
-								"----------------------------------------------------------------------------------------------------------------------------");
-						System.out.println("The Symmetric Key is : "
-								+ DatatypeConverter.printHexBinary(
-										symmetricKey.getEncoded()));
-						EncryptedRequest = Symmetric.encryptAES(request, symmetricKey);
-						System.out.println(
-								"----------------------------------------------------------------------------------------------------------------------------");
-						System.out.println("request sent !!");
-						System.out.println(
-								"----------------------------------------------------------------------------------------------------------------------------");
-						objectOut.writeObject(EncryptedRequest);
-						// get plain response
-						response = in.readLine();
-						System.out.println("Server replied ===> " + response);
-					} else if (this.EncryptType.equals("2")) {
-						symmetricKey = Symmetric.createAESKey("03150040010");
-						EncryptedRequest = Symmetric.encryptAES(request, symmetricKey);
-						objectOut.writeObject(EncryptedRequest);
-						// get plain response
-						response = in.readLine();
-						System.out.println("Server replied ===> " + response);
-					}
-
-					if (response.contains("Successful")) {
-						check = true;
-					}
-				} catch (Exception exception) {
-
-				}
-
+				UserInteraction userInteraction = new UserInteraction(socket, objectOut, EncryptType);
+				userInteraction.startInteraction();
 			}
 
 			System.out.println(
@@ -190,13 +90,15 @@ class Client {
 			// Information
 			while (check) {
 				ArrayList<String> request = new ArrayList<String>();
-				System.out.println("Please Enter: 1-Phone Number , 2-Addrees , 3-Age.");
+				System.out.println("Please Enter: 1-Phone Number , 2-Addrees , 3-Age , 4-NationalNumber");
 				request.add("completeInformation");
 				System.out.print("Phone Number : ");
 				request.add(sc.nextLine());
 				System.out.print("Addrees : ");
 				request.add(sc.nextLine());
 				System.out.print("Age : ");
+				request.add(sc.nextLine());
+				System.out.print("NationalNumber : ");
 				request.add(sc.nextLine());
 
 				try {

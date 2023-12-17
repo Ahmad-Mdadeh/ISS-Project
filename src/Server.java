@@ -126,7 +126,10 @@ class Server {
 					if (response.contains("Successful")) {
 						String[] resParts = response.split("! ");
 						printStream.println(resParts[0]);
+						printStream.println(resParts[1]);
+
 						System.out.println(resParts[1]);
+
 					} else {
 						printStream.println(response);
 						System.out.println(response);

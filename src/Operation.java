@@ -30,16 +30,17 @@ public class Operation {
         if (decrypted.get(0).toString().equals("login")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
             res = connectToDatabase.login(decrypted.get(1).toString(),
-                    decrypted.get(2).toString());
+                    decrypted.get(2).toString(), decrypted.get(3).toString());
         } else if (decrypted.get(0).toString().equals("signup")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
             res = connectToDatabase.signup(decrypted.get(1).toString(),
-                    decrypted.get(2).toString());
+                    decrypted.get(2).toString(), decrypted.get(3).toString());
         } else if (decrypted.get(0).toString().equals("completeInformation")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
             res = connectToDatabase.updateInformation(decrypted.get(1).toString(),
                     decrypted.get(2).toString(),
-                    decrypted.get(3).toString());
+                    decrypted.get(3).toString(),
+                    decrypted.get(4).toString());
         }
         return res;
     }
