@@ -7,24 +7,20 @@ public class VerifyingPasswords {
     // iterationCount : salt : hash
     public static void main(String[] args)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
-        String originalPassword = "password";
+        String originalPassword = "12345678";
 
         String generatedSecuredPasswordHash = PBKDF2WithHmacSHA1Hash.generatePBKDF2Hash(originalPassword);
         System.out.println(generatedSecuredPasswordHash);
 
-        boolean matched = validatePassword("password", generatedSecuredPasswordHash);
+        boolean matched = validatePassword("12345678", generatedSecuredPasswordHash);
         System.out.println(matched);
 
-        matched = validatePassword("password", generatedSecuredPasswordHash);
-        System.out.println(matched);
     }
 
     public static String hashedPassword(String pass) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String originalPassword = pass;
-
         String generatedSecuredPasswordHash = PBKDF2WithHmacSHA1Hash.generatePBKDF2Hash(originalPassword);
         System.out.println(generatedSecuredPasswordHash);
-
         return generatedSecuredPasswordHash;
     }
 
@@ -58,4 +54,3 @@ public class VerifyingPasswords {
         return bytes;
     }
 }
-    

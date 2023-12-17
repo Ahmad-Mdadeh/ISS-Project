@@ -1,7 +1,16 @@
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.xml.bind.DatatypeConverter;
 
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.util.Arrays;
+import java.util.Base64;
 
 public class Hyper {
         // Rivest Shamir Adleman
@@ -15,7 +24,7 @@ public class Hyper {
         }
 
         // Encryption function which converts
-        public static byte[] Encrept(String plainText, PublicKey publicKey)
+        public static byte[] encrept(String plainText, PublicKey publicKey)
                         throws Exception {
                 Cipher cipher = Cipher.getInstance(RSA);
 
@@ -25,33 +34,24 @@ public class Hyper {
         }
 
         // Decryption function
-        public static String Decrept(String cipherText, PrivateKey privateKey)
+        public static String decrypt(String cipherText, PrivateKey privateKey)
                         throws Exception {
-                byte[] messageToBytes = cipherText.getBytes();
-                Cipher cipher = Cipher.getInstance(RSA);
-                cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                byte[] result = cipher.doFinal(messageToBytes);
+                byte[] cipherTextByte = DatatypeConverter.parseHexBinary(cipherText);
 
-                return new String(result);
-        }
-
-        public static String Decreptsecretkeyserver(byte[] cipherText, PrivateKey privateKey)
-                        throws Exception {
-                Cipher cipher = Cipher.getInstance(RSA);
-
-                cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                byte[] result = cipher.doFinal(cipherText);
-
-                return new String(result);
-        }
-
-        // Decryption function
-        public static String Decrept2(byte[] cipherText, PrivateKey privateKey)
-                        throws Exception {
                 Cipher cipher = Cipher.getInstance(RSA);
 
                 cipher.init(Cipher.DECRYPT_MODE,
                                 privateKey);
+                byte[] result = cipher.doFinal(cipherTextByte);
+
+                return new String(result);
+        }
+
+        public static String decreptsecretkeyserver(byte[] cipherText, PrivateKey privateKey)
+                        throws Exception {
+                Cipher cipher = Cipher.getInstance(RSA);
+
+                cipher.init(Cipher.DECRYPT_MODE, privateKey);
                 byte[] result = cipher.doFinal(cipherText);
 
                 return new String(result);

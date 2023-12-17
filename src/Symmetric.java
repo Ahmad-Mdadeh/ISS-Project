@@ -1,11 +1,14 @@
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.spec.KeySpec;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -64,6 +67,12 @@ public class Symmetric {
         }
 
         return decryptedTextList;
+    }
+
+    public static SecretKey GenerateSessionKey() throws NoSuchAlgorithmException {
+        KeyGenerator keygenerator = KeyGenerator.getInstance("AES");
+        symmetricKey = keygenerator.generateKey();
+        return symmetricKey;
     }
 
     public static void main(String[] args) {

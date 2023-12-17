@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 
@@ -8,7 +9,9 @@ import javax.xml.bind.DatatypeConverter;
 
 // Server class 
 class Server {
-	static KeyPair keypair;
+	static KeyPair keyPair;
+	private static PublicKey publicKey = null;
+	private static PrivateKey privateKey = null;
 
 	public static void main(String[] args) {
 		ServerSocket server = null;
@@ -19,29 +22,29 @@ class Server {
 			server = new ServerSocket(1234);
 			server.setReuseAddress(true);
 
-			// create keys to server
+			// create Public and Private keys
+			keyPair = Hyper.generateKeyPair();
+			publicKey = keyPair.getPublic();
+			privateKey = keyPair.getPrivate();
 
-			keypair = Hyper.generateKeyPair();
 			System.out.println(
 					"The Public Key is: "
 							+ DatatypeConverter.printHexBinary(
-									keypair.getPublic().getEncoded()));
+									publicKey.getEncoded()));
 			System.out.println(
 					"----------------------------------------------------------------------------------------------------------------------------");
 			System.out.println(
 					"The Private Key is: "
 							+ DatatypeConverter.printHexBinary(
-									keypair.getPrivate().getEncoded()));
-			// running infinite loop for getting
-			// client request
+									privateKey.getEncoded()));
+
+			// running infinite loop for getting client request
 			while (true) {
 
-				// socket object to receive incoming client
-				// requests
+				// socket object to receive incoming client requests
 				Socket client = server.accept();
 
-				// Displaying that new client is connected
-				// to server
+				// Displaying that new client is connected to server
 				System.out.println("New client connected : "
 						+ client.getInetAddress()
 								.getHostAddress());
@@ -49,14 +52,12 @@ class Server {
 				// create a new thread object
 				ClientHandler clientSock = new ClientHandler(client);
 
-				// This thread will handle the client
-				// separately
+				// This thread will handle the client separately
 				new Thread(clientSock).start();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			if (server != null) {
@@ -89,21 +90,23 @@ class Server {
 			try {
 				String response = "";
 				ArrayList<String> received, decrypt = new ArrayList<>();
-				this.EncryptType = EncryptTypeIn.readLine();
 
 				// get the outputstream of client
 				outObj = clientSocket.getOutputStream();
 				ObjectdataOut = new ObjectOutputStream(outObj);
 				inObj = new ObjectInputStream(clientSocket.getInputStream());
 				EncryptTypeIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-				printWriterOut = new PrintWriter(clientSocket.getOutputStream(), true);
+				printWriterOut = new PrintWriter(outObj, true);
 				printStream = new PrintStream(outObj);
+				this.EncryptType = EncryptTypeIn.readLine();
 
 				if (this.EncryptType.equals("2")) {
 					// Send Serve public Key
-					PublicKey publicKey = keypair.getPublic();
+					PublicKey publicKey = keyPair.getPublic();
 					ObjectdataOut.writeObject(publicKey);
-
+					String strCSK = EncryptTypeIn.readLine();
+					System.out.println(
+							"The Session Key is :" + Hyper.decrypt(strCSK, keyPair.getPrivate()));
 				}
 				while (true) {
 					// writing the received message from
@@ -114,7 +117,7 @@ class Server {
 					Operation operation = new Operation();
 
 					// Decrypt the Received
-					if (this.EncryptType.equals("1")) {
+					if (this.EncryptType.equals("1") || this.EncryptType.equals("2")) {
 						decrypt = Operation.decrypt(received);
 					}
 
@@ -125,8 +128,6 @@ class Server {
 						printStream.println(resParts[0]);
 						System.out.println(resParts[1]);
 					} else {
-
-						System.out.println(received + " " + decrypt);
 						printStream.println(response);
 						System.out.println(response);
 					}

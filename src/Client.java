@@ -1,6 +1,6 @@
-
 import java.io.*;
 import java.net.*;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.*;
 import javax.crypto.SecretKey;
@@ -14,11 +14,13 @@ class Client {
 	private Scanner sc = null;
 	String EncryptType = "";
 	SecretKey symmetricKey;
+	PublicKey publicKeyFromServer = null;
+	byte[] EncryptedSessionKey = null;
 
 	// driver code
 	public Client(String address, int port) {
 		boolean check = false;
-
+		PrintWriter printWriterOut = null;
 		try {
 
 			// creating an object of socket
@@ -32,6 +34,7 @@ class Client {
 			// opening output stream on the socket
 			objectOut = new ObjectOutputStream(socket.getOutputStream());
 			objectIn = new ObjectInputStream(socket.getInputStream());
+			printWriterOut = new PrintWriter(socket.getOutputStream(), true);
 
 			PrintStream printStream = new PrintStream(socket.getOutputStream());
 
@@ -40,27 +43,58 @@ class Client {
 			System.out.print(
 					"Your Option : ");
 			this.EncryptType = sc.nextLine();
+
+			while (!(this.EncryptType.equals("0") || this.EncryptType.equals("1") || this.EncryptType.equals("2"))) {
+				System.out.print(
+						"Please Try again : ");
+				this.EncryptType = sc.nextLine();
+			}
+
+			printStream.println(this.EncryptType);
+
 			if (this.EncryptType.equals("2")) {
-				PublicKey publicKeyFromServer = (PublicKey) objectIn.readObject();
-				System.out.println(
-						"The Public Key From Server is: "
-								+ DatatypeConverter.printHexBinary(publicKeyFromServer.getEncoded()));
+				// received Public Key From Server
+				publicKeyFromServer = (PublicKey) objectIn.readObject();
+
+				// generateSessionKey
+				symmetricKey = Symmetric.GenerateSessionKey();
+
 				System.out.println(
 						"----------------------------------------------------------------------------------------------------------------------------");
+				System.out
+						.println("The Session Key is :" + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
+				EncryptedSessionKey = Hyper.encrept(DatatypeConverter.printHexBinary(symmetricKey.getEncoded()),
+						publicKeyFromServer);
+				System.out.println(
+						"----------------------------------------------------------------------------------------------------------------------------");
+				System.out.println(
+						"The Encrypted Session Key is :" + DatatypeConverter.printHexBinary(EncryptedSessionKey));
+
+				// Send the Encrypted Session Key to Server
+				printWriterOut.println(DatatypeConverter.printHexBinary(EncryptedSessionKey));
+
 			}
-			printStream.println(this.EncryptType);
 
 			// Auth
 			while (!check) {
 				ArrayList<String> request = new ArrayList<String>();
-
 				System.out.println(
-						"Enter: 'E' or 'e' to exit.\nEnter: 'L' or 'l' to login.\nEnter: 'S' or 's'to signup.");
+						"----------------------------------------------------------------------------------------------------------------------------");
+				System.out.println(
+						"Enter:  E or e to exit.\n\tL or l to login.\n\tS or s to signup.");
 				System.out.print(
 						"Your Option : ");
 				String tmp = sc.nextLine();
 				String input;
-
+				while (!(tmp.equals("E") || tmp.equals("e")
+						|| tmp.equals("L") || tmp.equals("l")
+						|| tmp.equals("S") || tmp.equals("s"))) {
+					System.out.print(
+							"Please Try again : ");
+					tmp = sc.nextLine();
+				}
+				System.out.println(
+						"----------------------------------------------------------------------------------------------------------------------------");
 				switch (tmp) {
 					case "E":
 					case "e":
@@ -81,11 +115,11 @@ class Client {
 					break;
 				} else if (input.equals("login")) {
 					System.out.println("Please Enter User Name And Password :");
+					request.add("login");
 					System.out.print("User Name : ");
 					request.add(sc.nextLine());
 					System.out.print("Password : ");
 					request.add(sc.nextLine());
-					request.add("login");
 				} else if (input.equals("signup")) {
 					System.out.println("Please Enter User Name And Password :");
 					request.add("signup");
@@ -127,6 +161,13 @@ class Client {
 						System.out.println("request sent !!");
 						System.out.println(
 								"----------------------------------------------------------------------------------------------------------------------------");
+						objectOut.writeObject(EncryptedRequest);
+						// get plain response
+						response = in.readLine();
+						System.out.println("Server replied ===> " + response);
+					} else if (this.EncryptType.equals("2")) {
+						symmetricKey = Symmetric.createAESKey("03150040010");
+						EncryptedRequest = Symmetric.encryptAES(request, symmetricKey);
 						objectOut.writeObject(EncryptedRequest);
 						// get plain response
 						response = in.readLine();
@@ -188,9 +229,7 @@ class Client {
 						System.out.println("Server replied ===> " + response);
 						System.out.println(
 								"----------------------------------------------------------------------------------------------------------------------------");
-
 					}
-
 					if (response.contains("Successful")) {
 						check = false;
 					}
@@ -202,7 +241,10 @@ class Client {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		System.out.println(" Connection Terminated !! ");

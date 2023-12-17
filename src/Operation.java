@@ -27,14 +27,13 @@ public class Operation {
     }
 
     String auth() {
-        if (decrypted.get(2).toString().equals("login")) {
+        if (decrypted.get(0).toString().equals("login")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
-            res = connectToDatabase.login(decrypted.get(0).toString(),
-                    decrypted.get(1).toString());
-
+            res = connectToDatabase.login(decrypted.get(1).toString(),
+                    decrypted.get(2).toString());
         } else if (decrypted.get(0).toString().equals("signup")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
-            res = connectToDatabase.Signup(decrypted.get(1).toString(),
+            res = connectToDatabase.signup(decrypted.get(1).toString(),
                     decrypted.get(2).toString());
         } else if (decrypted.get(0).toString().equals("completeInformation")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();

@@ -28,7 +28,7 @@ public class ConnectToDatabase {
     }
 
     public String username(String name, Connection connection) {
-        String result = "error";
+        String result = "";
         try (
                 PreparedStatement preparedStatement = connection
                         .prepareStatement("SELECT * FROM `users` WHERE name=?")) {
@@ -37,7 +37,7 @@ public class ConnectToDatabase {
             ResultSet user = preparedStatement.executeQuery();
 
             if (user.next()) {
-                result = "Username already taken";
+                result = "Username already exite";
             } else {
                 result = "Username available";
             }
@@ -76,35 +76,38 @@ public class ConnectToDatabase {
         }
     }
 
-    public String Signup(String name, String pass) {
-        Statement stmtement = null;
-        Connection connection = this.connect();
-        if (connection != null) {
-            try {
+    public String signup(String name, String pass) {
+        try (Connection connection = connect()) {
+            if (connection != null) {
                 String availability = username(name, connection);
                 if (!availability.equals("Username available")) {
                     return availability;
                 }
+
                 pass = VerifyingPasswords.hashedPassword(pass);
-                stmtement = (Statement) connection.createStatement();
-                stmtement.executeUpdate(
-                        "INSERT INTO users (name,pass) VALUES ( '" + name + "','" + pass + "')",
-                        Statement.RETURN_GENERATED_KEYS);
-                ResultSet rs = stmtement.getGeneratedKeys();
-                if (rs.next()) {
-                    id = rs.getInt(1);
+                // Use PreparedStatement to prevent SQL injection
+                String insertQuery = "INSERT INTO users (name, pass) VALUES (?, ?)";
+                try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery,
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, name);
+                    preparedStatement.setString(2, pass);
+
+                    preparedStatement.executeUpdate();
+
+                    try (ResultSet rs = preparedStatement.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            id = rs.getInt(1);
+                        }
+                    }
                 }
 
-            } catch (SQLException throwable) {
-                throwable.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (InvalidKeySpecException e) {
-                e.printStackTrace();
+                return "SignUp Successful !!! " + id;
             }
-            return "SignUp Successful !!! " + id;
+            return "Connection error !!! ";
+        } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            return "SignUp failed due to an unexpected error.";
         }
-        return "connection error !!! ";
     }
 
     public String updateInformation(String newPhone, String newAddress, String newAge) {
@@ -146,4 +149,4 @@ public class ConnectToDatabase {
         }
     }
 
-} // class ends
+} 
