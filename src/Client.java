@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.*;
 import javax.crypto.SecretKey;
@@ -91,13 +90,9 @@ class Client {
 
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		} 
 		System.out.println(" Connection Terminated !! ");
 
 		try {

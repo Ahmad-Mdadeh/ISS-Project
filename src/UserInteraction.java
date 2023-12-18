@@ -14,35 +14,48 @@ public class UserInteraction {
     private ObjectOutputStream objectOut;
     private String EncryptType;
     private SecretKey symmetricKey;
-    private boolean isLogin;
     private Scanner sc;
     private String permissions;
+    private boolean isExit;
 
     public UserInteraction(Socket socket, ObjectOutputStream objectOut, String EncryptType) {
         this.socket = socket;
         this.objectOut = objectOut;
         this.EncryptType = EncryptType;
-        this.isLogin = false;
         this.sc = new Scanner(System.in);
         this.permissions = "";
+        this.isExit = false;
 
+    }
+
+    public boolean getIsExit() {
+        return isExit;
     }
 
     public void startInteraction() throws Exception {
         ArrayList<String> request = getUserLogin();
-        processRequest(request);
-        while (true) {
-            try {
-                if (permissions.equals("0")) {
-                    request.clear();
-                    request = getUserRegistration();
-                    processRequest(request);
-                } else {
-                    break;
+        if (!(request.get(0).equals("exit"))) {
+            processRequest(request);
+            while (true) {
+                try {
+                    if (permissions.equals("0")) {
+                        request.clear();
+                        request = getUserRegistration();
+                        if (!(request.get(0).equals("exit"))) {
+                            processRequest(request);
+                        } else {
+                            System.out.println("Exit");
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        } else {
+            System.out.println("Exit");
         }
     }
 
