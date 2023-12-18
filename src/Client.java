@@ -91,12 +91,18 @@ class Client {
 			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut, EncryptType);
 			informationUpdater.updateInformation();
 
+			System.out.println(
+					"----------------------------------------------------------------------------------------------------------------------------\n");
+
+			if (userInteraction.getIsExit()) {
+				return;
+			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println(" Connection Terminated !! ");
 
 		try {
 			objectOut.close();

@@ -15,18 +15,32 @@ public class InformationUpdater {
     private String EncryptType;
     private SecretKey symmetricKey;
     private Scanner sc;
+    private boolean isExit;
 
     public InformationUpdater(Socket socket, ObjectOutputStream objectOut, String EncryptType) {
         this.socket = socket;
         this.objectOut = objectOut;
         this.EncryptType = EncryptType;
         this.sc = new Scanner(System.in);
+        this.isExit = false;
+
+    }
+
+    public boolean getIsExit() {
+        return isExit;
     }
 
     public void updateInformation() {
         ArrayList<String> request = getUserInput();
         try {
-            processRequest(request);
+            if (!request.get(0).equals("exit"))
+                processRequest(request);
+            else {
+                System.out.println(
+                        "----------------------------------------------------------------------------------------------------------------------------");
+                System.out.println("Exit");
+                isExit = true;
+            }
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -34,17 +48,27 @@ public class InformationUpdater {
 
     private ArrayList<String> getUserInput() {
         ArrayList<String> request = new ArrayList<>();
-        System.out.println("Please Enter: 1-Phone Number, 2-Address, 3-Age, 4-NationalNumber");
-        request.add("completeInformation");
-        System.out.print("Phone Number: ");
-        request.add(sc.nextLine());
-        System.out.print("Address: ");
-        request.add(sc.nextLine());
-        System.out.print("Age: ");
-        request.add(sc.nextLine());
-        System.out.print("NationalNumber: ");
-        request.add(sc.nextLine());
-        return request;
+        System.out.print("Do want complete information (yes/no) : ");
+        String input = sc.nextLine();
+        if (input.equalsIgnoreCase("n") || input.equalsIgnoreCase("no")) {
+            request.add("exit");
+            return request;
+        } else {
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("Please Enter: 1-Phone Number, 2-Address, 3-Age, 4-NationalNumber");
+            request.add("completeInformation");
+            System.out.print("Phone Number: ");
+            request.add(sc.nextLine());
+            System.out.print("Address: ");
+            request.add(sc.nextLine());
+            System.out.print("Age: ");
+            request.add(sc.nextLine());
+            System.out.print("NationalNumber: ");
+            request.add(sc.nextLine());
+            return request;
+        }
+
     }
 
     private void processRequest(ArrayList<String> request) throws Exception {

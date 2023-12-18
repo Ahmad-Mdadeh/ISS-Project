@@ -18,6 +18,8 @@ public class UserInteraction {
     private String permissions;
     private boolean isExit;
 
+   
+
     public UserInteraction(Socket socket, ObjectOutputStream objectOut, String EncryptType) {
         this.socket = socket;
         this.objectOut = objectOut;
@@ -31,7 +33,6 @@ public class UserInteraction {
     public boolean getIsExit() {
         return isExit;
     }
-
     public void startInteraction() throws Exception {
         ArrayList<String> request = getUserLogin();
         if (!(request.get(0).equals("exit"))) {
