@@ -29,7 +29,14 @@ public class UserInteraction {
 
     public void startInteraction() {
         while (!check) {
-            ArrayList<String> request = getUserOption();
+            ArrayList<String> request;
+            if (!permissions.equals("0")) {
+                request = getUserOption();
+            } else if (permissions.equals("0")) {
+                request = getUserRegistration();
+            } else {
+                break;
+            }
             try {
                 processRequest(request);
             } catch (Exception exception) {
@@ -39,18 +46,21 @@ public class UserInteraction {
     }
 
     private ArrayList<String> getUserOption() {
+
         ArrayList<String> request = new ArrayList<>();
-        System.out.println("----------------------------------------------------------------------------------------------------------------------------");
-        System.out.println("Enter:  E or e to exit.\n\tL or l to login.\n\tS or s to signup.");
+        System.out.println(
+                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("Enter:  E or e to exit.\n\tL or l to login.");
         System.out.print("Your Option : ");
         String tmp = sc.nextLine();
 
-        while (!(tmp.equals("E") || tmp.equals("e") || tmp.equals("L") || tmp.equals("l") || tmp.equals("S") || tmp.equals("s"))) {
+        while (!(tmp.equals("E") || tmp.equals("e") || tmp.equals("L") || tmp.equals("l"))) {
             System.out.print("Please Try again : ");
             tmp = sc.nextLine();
         }
 
-        System.out.println("----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println(
+                "----------------------------------------------------------------------------------------------------------------------------");
 
         switch (tmp) {
             case "E":
@@ -61,6 +71,38 @@ public class UserInteraction {
             case "l":
                 request.add("login");
                 getUserInformation(request);
+                break;
+            default:
+                break;
+        }
+
+        return request;
+    }
+
+    private ArrayList<String> getUserRegistration() {
+
+        ArrayList<String> request = new ArrayList<>();
+
+        System.out.println(
+                "----------------------------------------------------------------------------------------------------------------------------");
+
+        System.out.println("Enter:  E or e to exit.\n\tS or s to User Registration.");
+        System.out.print("Your Option : ");
+
+        String tmp = sc.nextLine();
+
+        while (!(tmp.equals("E") || tmp.equals("e") || tmp.equals("S") || tmp.equals("s"))) {
+            System.out.print("Please Try again : ");
+            tmp = sc.nextLine();
+        }
+
+        System.out.println(
+                "----------------------------------------------------------------------------------------------------------------------------");
+
+        switch (tmp) {
+            case "E":
+            case "e":
+                request.add("exit");
                 break;
             case "S":
             case "s":
@@ -103,12 +145,15 @@ public class UserInteraction {
             System.out.println("Server replied ===> " + response);
         } else if (EncryptType.equals("1")) {
             symmetricKey = Symmetric.createAESKey("03150040010");
-            System.out.println("----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
             System.out.println("The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
             encryptedRequest = Symmetric.encryptAES(request, symmetricKey);
-            System.out.println("----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
             System.out.println("request sent !!");
-            System.out.println("----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
             objectOut.writeObject(encryptedRequest);
             response = in.readLine();
             permissions = in.readLine();
@@ -117,9 +162,6 @@ public class UserInteraction {
             // Handle case when EncryptType is 2
         }
 
-        if (permissions.equals("1") || permissions.equals("2")) {
-            check = true;
-        }
     }
 
 }

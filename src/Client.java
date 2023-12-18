@@ -77,68 +77,17 @@ class Client {
 
 			}
 
-			// Auth
-			while (!check) {
-				UserInteraction userInteraction = new UserInteraction(socket, objectOut, EncryptType);
-				userInteraction.startInteraction();
-			}
+			// UserInteraction
+			UserInteraction userInteraction = new UserInteraction(socket, objectOut, EncryptType);
+			userInteraction.startInteraction();
 
 			System.out.println(
 					"----------------------------------------------------------------------------------------------------------------------------");
 			System.out.println();
 
-			// Information
-			while (check) {
-				ArrayList<String> request = new ArrayList<String>();
-				System.out.println("Please Enter: 1-Phone Number , 2-Addrees , 3-Age , 4-NationalNumber");
-				request.add("completeInformation");
-				System.out.print("Phone Number : ");
-				request.add(sc.nextLine());
-				System.out.print("Addrees : ");
-				request.add(sc.nextLine());
-				System.out.print("Age : ");
-				request.add(sc.nextLine());
-				System.out.print("NationalNumber : ");
-				request.add(sc.nextLine());
-
-				try {
-					String response = "";
-					BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-					ArrayList<String> EncryptedRequest = new ArrayList<String>();
-					if (this.EncryptType.equals("0")) {
-
-						objectOut.writeObject(request);
-						response = in.readLine();
-						System.out.println("Server replied ===> " + response);
-
-					} else if (this.EncryptType.equals("1")) {
-
-						symmetricKey = Symmetric.createAESKey("03150040010");
-						System.out.println(
-								"----------------------------------------------------------------------------------------------------------------------------");
-						System.out.println("The Symmetric Key is : "
-								+ DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
-						EncryptedRequest = Symmetric.encryptAES(request, symmetricKey);
-						System.out.println(EncryptedRequest.get(1));
-						System.out.println(
-								"----------------------------------------------------------------------------------------------------------------------------");
-						System.out.println("request sent !! ");
-						System.out.println(
-								"----------------------------------------------------------------------------------------------------------------------------");
-						objectOut.writeObject(EncryptedRequest);
-						// get plain response
-						response = in.readLine();
-						System.out.println("Server replied ===> " + response);
-						System.out.println(
-								"----------------------------------------------------------------------------------------------------------------------------");
-					}
-					if (response.contains("Successful")) {
-						check = false;
-					}
-				} catch (Exception exception) {
-				}
-
-			}
+			// InformationUpdater
+			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut, EncryptType);
+			informationUpdater.updateInformation();
 
 		} catch (IOException e) {
 			e.printStackTrace();
