@@ -44,8 +44,16 @@ public class UserInteraction {
                         if (!(request.get(0).equals("exit"))) {
                             processRequest(request);
                         } else {
-                            System.out.println("Exit");
-                            break;
+                            request.clear();
+                            request = getUserLogin();
+                            if (!(request.get(0).equals("exit"))) {
+                                processRequest(request);
+                            } else {
+                                isExit = true;
+                                System.out.println("Exit");
+                                break;
+                            }
+
                         }
                     } else {
                         break;
@@ -55,6 +63,7 @@ public class UserInteraction {
                 }
             }
         } else {
+            isExit = true;
             System.out.println("Exit");
         }
     }

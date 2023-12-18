@@ -81,8 +81,11 @@ class Client {
 			userInteraction.startInteraction();
 
 			System.out.println(
-					"----------------------------------------------------------------------------------------------------------------------------");
-			System.out.println();
+					"----------------------------------------------------------------------------------------------------------------------------\n");
+
+			if (userInteraction.getIsExit()) {
+				return;
+			}
 
 			// InformationUpdater
 			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut, EncryptType);
@@ -92,7 +95,7 @@ class Client {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
-		} 
+		}
 		System.out.println(" Connection Terminated !! ");
 
 		try {
