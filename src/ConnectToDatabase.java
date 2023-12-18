@@ -80,7 +80,8 @@ public class ConnectToDatabase {
                         id = user.getInt("id");
                         nationalNumber = user.getString("nationalNumber");
                         permissions = user.getString("permissions");
-                        return "Login Successful !!! " + permissions + "! " +user.getInt("id") + " : " + user.getString("name");
+                        return "Login Successful !!! " + permissions + "! " + user.getInt("id") + " : "
+                                + user.getString("name");
                     } else {
                         return "Wrong Password";
                     }
@@ -124,7 +125,7 @@ public class ConnectToDatabase {
                         }
                     }
 
-                    return "SignUp Successful !!! " + id;
+                    return "SignUp Successful !!! " + permissions + "! " + id;
                 }
                 return "Connection error !!! ";
             } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {

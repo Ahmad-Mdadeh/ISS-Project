@@ -14,7 +14,7 @@ public class UserInteraction {
     private ObjectOutputStream objectOut;
     private String EncryptType;
     private SecretKey symmetricKey;
-    private boolean check;
+    private boolean isLogin;
     private Scanner sc;
     private String permissions;
 
@@ -22,30 +22,31 @@ public class UserInteraction {
         this.socket = socket;
         this.objectOut = objectOut;
         this.EncryptType = EncryptType;
-        this.check = false;
+        this.isLogin = false;
         this.sc = new Scanner(System.in);
         this.permissions = "";
+
     }
 
-    public void startInteraction() {
-        while (!check) {
-            ArrayList<String> request;
-            if (!permissions.equals("0")) {
-                request = getUserOption();
-            } else if (permissions.equals("0")) {
-                request = getUserRegistration();
-            } else {
-                break;
-            }
+    public void startInteraction() throws Exception {
+        ArrayList<String> request = getUserLogin();
+        processRequest(request);
+        while (true) {
             try {
-                processRequest(request);
-            } catch (Exception exception) {
-                exception.printStackTrace();
+                if (permissions.equals("0")) {
+                    request.clear();
+                    request = getUserRegistration();
+                    processRequest(request);
+                } else {
+                    break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
 
-    private ArrayList<String> getUserOption() {
+    private ArrayList<String> getUserLogin() {
 
         ArrayList<String> request = new ArrayList<>();
         System.out.println(

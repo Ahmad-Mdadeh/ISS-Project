@@ -127,7 +127,6 @@ class Server {
 						String[] resParts = response.split("! ");
 						printStream.println(resParts[0]);
 						printStream.println(resParts[1]);
-
 						System.out.println(resParts[1]);
 
 					} else {
