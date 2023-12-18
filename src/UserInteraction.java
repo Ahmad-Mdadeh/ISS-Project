@@ -13,12 +13,11 @@ public class UserInteraction {
     private Socket socket;
     private ObjectOutputStream objectOut;
     private String EncryptType;
-    private SecretKey symmetricKey;
     private Scanner sc;
     private String permissions;
     private boolean isExit;
-
-   
+    String nationalNumber;
+    SecretKey symmetricKey;
 
     public UserInteraction(Socket socket, ObjectOutputStream objectOut, String EncryptType) {
         this.socket = socket;
@@ -26,6 +25,8 @@ public class UserInteraction {
         this.EncryptType = EncryptType;
         this.sc = new Scanner(System.in);
         this.permissions = "";
+        this.symmetricKey = null;
+        this.nationalNumber = "";
         this.isExit = false;
 
     }
@@ -33,8 +34,14 @@ public class UserInteraction {
     public boolean getIsExit() {
         return isExit;
     }
+
+    public String getNationalNumber() {
+        return nationalNumber;
+    }
+
     public void startInteraction() throws Exception {
         ArrayList<String> request = getUserLogin();
+        this.nationalNumber = request.get(3);
         if (!(request.get(0).equals("exit"))) {
             processRequest(request);
             while (true) {
@@ -156,6 +163,7 @@ public class UserInteraction {
         request.add(p);
         System.out.print("NationalNumber : ");
         request.add(sc.nextLine());
+
     }
 
     private void processRequest(ArrayList<String> request) throws Exception {
@@ -168,13 +176,18 @@ public class UserInteraction {
             response = in.readLine();
             System.out.println("Server replied ===> " + response);
         } else if (EncryptType.equals("1")) {
-            symmetricKey = Symmetric.createAESKey("03150040010");
-            System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
-            System.out.println("The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
-            encryptedRequest = Symmetric.encryptAES(request, symmetricKey);
-            System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
+            if (!request.get(0).equals("login")) {
+                symmetricKey = Symmetric.createAESKey(nationalNumber);
+                System.out.println(
+                        "The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
+                encryptedRequest = Symmetric.encryptAES(request, symmetricKey);
+                System.out.println(
+                        "----------------------------------------------------------------------------------------------------------------------------");
+            } else {
+                encryptedRequest = request;
+                System.out.println(
+                        "----------------------------------------------------------------------------------------------------------------------------");
+            }
             System.out.println("request sent !!");
             System.out.println(
                     "----------------------------------------------------------------------------------------------------------------------------");

@@ -16,6 +16,7 @@ public class InformationUpdater {
     private SecretKey symmetricKey;
     private Scanner sc;
     private boolean isExit;
+    String nationalNumber;
 
     public InformationUpdater(Socket socket, ObjectOutputStream objectOut, String EncryptType) {
         this.socket = socket;
@@ -28,6 +29,10 @@ public class InformationUpdater {
 
     public boolean getIsExit() {
         return isExit;
+    }
+
+    public void setNationalNumber(String nationalNumber) {
+        this.nationalNumber = nationalNumber;
     }
 
     public void updateInformation() {
@@ -56,7 +61,7 @@ public class InformationUpdater {
         } else {
             System.out.println(
                     "----------------------------------------------------------------------------------------------------------------------------");
-            System.out.println("Please Enter: 1-Phone Number, 2-Address, 3-Age, 4-NationalNumber");
+            System.out.println("Please Enter: 1-Phone Number, 2-Address, 3-Age.");
             request.add("completeInformation");
             System.out.print("Phone Number: ");
             request.add(sc.nextLine());
@@ -64,8 +69,7 @@ public class InformationUpdater {
             request.add(sc.nextLine());
             System.out.print("Age: ");
             request.add(sc.nextLine());
-            System.out.print("NationalNumber: ");
-            request.add(sc.nextLine());
+        
             return request;
         }
 
@@ -81,7 +85,7 @@ public class InformationUpdater {
             response = in.readLine();
             System.out.println("Server replied ===> " + response);
         } else if (EncryptType.equals("1")) {
-            symmetricKey = Symmetric.createAESKey("03150040010");
+            symmetricKey = Symmetric.createAESKey(nationalNumber);
             System.out.println(
                     "----------------------------------------------------------------------------------------------------------------------------");
             System.out.println("The Symmetric Key is: " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));

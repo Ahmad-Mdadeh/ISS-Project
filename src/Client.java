@@ -89,6 +89,7 @@ class Client {
 
 			// InformationUpdater
 			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut, EncryptType);
+			informationUpdater.setNationalNumber(userInteraction.getNationalNumber());
 			informationUpdater.updateInformation();
 
 			System.out.println(

@@ -1,16 +1,6 @@
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.xml.bind.DatatypeConverter;
-
-import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.interfaces.RSAPrivateKey;
-import java.util.Arrays;
-import java.util.Base64;
 
 public class Hyper {
         // Rivest Shamir Adleman
@@ -37,11 +27,8 @@ public class Hyper {
         public static String decrypt(String cipherText, PrivateKey privateKey)
                         throws Exception {
                 byte[] cipherTextByte = DatatypeConverter.parseHexBinary(cipherText);
-
                 Cipher cipher = Cipher.getInstance(RSA);
-
-                cipher.init(Cipher.DECRYPT_MODE,
-                                privateKey);
+                cipher.init(Cipher.DECRYPT_MODE, privateKey);
                 byte[] result = cipher.doFinal(cipherTextByte);
 
                 return new String(result);

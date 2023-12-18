@@ -108,6 +108,7 @@ class Server {
 					System.out.println(
 							"The Session Key is :" + Hyper.decrypt(strCSK, keyPair.getPrivate()));
 				}
+
 				while (true) {
 					// writing the received message from
 					// client
@@ -118,7 +119,12 @@ class Server {
 
 					// Decrypt the Received
 					if (this.EncryptType.equals("1") || this.EncryptType.equals("2")) {
-						decrypt = Operation.decrypt(received);
+						if (received.get(0).equals("login")) {
+							decrypt = received;
+						} else {
+							decrypt = operation.decrypt(received);
+						}
+
 					}
 
 					operation.getRequest(decrypt);
@@ -127,6 +133,12 @@ class Server {
 						String[] resParts = response.split("! ");
 						printStream.println(resParts[0]);
 						printStream.println(resParts[1]);
+						if (3 <= resParts.length) {
+							Operation.nationalNumber = resParts[2];
+						}
+						// System.out.println("nationalNumber");
+						// System.out.println(resParts[2]);
+						System.out.print("Permission :");
 						System.out.println(resParts[1]);
 
 					} else {

@@ -80,7 +80,8 @@ public class ConnectToDatabase {
                         id = user.getInt("id");
                         nationalNumber = user.getString("nationalNumber");
                         permissions = user.getString("permissions");
-                        return "Login Successful !!! " + permissions + "! " + user.getInt("id") + " : "
+                        return "Login Successful !!! " + permissions + "! " + nationalNumber + "! " + user.getInt("id")
+                                + " : "
                                 + user.getString("name");
                     } else {
                         return "Wrong Password";
@@ -136,10 +137,10 @@ public class ConnectToDatabase {
         return "Not Permissions";
     }
 
-    public String updateInformation(String newPhone, String newAddress, String newAge, String nationalNumber) {
+    public String updateInformation(String newPhone, String newAddress, String newAge) {
         try (Connection connection = this.connect();
                 PreparedStatement updateStatement = connection.prepareStatement(
-                        "UPDATE users SET phone=?, address=?, age=?, nationalNumber=? WHERE id=?");
+                        "UPDATE users SET phone=?, address=?, age=? WHERE id=?");
                 PreparedStatement selectStatement = connection.prepareStatement(
                         "SELECT * FROM `users` WHERE id=?")) {
 
@@ -147,8 +148,7 @@ public class ConnectToDatabase {
             updateStatement.setString(1, newPhone);
             updateStatement.setString(2, newAddress);
             updateStatement.setString(3, newAge);
-            updateStatement.setString(4, nationalNumber);
-            updateStatement.setInt(5, id);
+            updateStatement.setInt(4, id);
 
             int affectedRows = updateStatement.executeUpdate();
 
@@ -161,8 +161,7 @@ public class ConnectToDatabase {
                                 ", Name : " + updatedUser.getString("name") +
                                 ", Phone : " + updatedUser.getString("phone") +
                                 ", Address : " + updatedUser.getString("address") +
-                                ", Age : " + updatedUser.getString("age") +
-                                ", nationalNumber : " + updatedUser.getString("nationalNumber");
+                                ", Age : " + updatedUser.getString("age");
                     } else {
                         return "No user found with ID: " + id;
                     }

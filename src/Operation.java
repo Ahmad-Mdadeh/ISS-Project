@@ -4,21 +4,23 @@ import javax.xml.bind.DatatypeConverter;
 
 public class Operation {
     ArrayList<String> decrypted = new ArrayList<>();
-    String res = "";
+    String res;
+    static String nationalNumber;
 
-    Operation() throws Exception {
-
+    public void setNationalNumber(String nationalNumber) {
+        Operation.nationalNumber = nationalNumber;
     }
 
-    static ArrayList<String> decrypt(ArrayList<String> EncryptedRequest) throws Exception {
+    ArrayList<String> decrypt(ArrayList<String> EncryptedRequest) throws Exception {
         System.out.println("The Symmetric Key is :"
                 + DatatypeConverter.printHexBinary(
-                        Symmetric.createAESKey("03150040010").getEncoded()));
-        return Symmetric.decryptAES(EncryptedRequest, Symmetric.createAESKey("03150040010"));
+                        Symmetric.createAESKey(nationalNumber).getEncoded()));
+        return Symmetric.decryptAES(EncryptedRequest, Symmetric.createAESKey(nationalNumber));
 
     }
 
     void getRequest(ArrayList<String> received) {
+
         for (int i = 0; i < received.size(); i++) {
             decrypted.add(received.get(i).toString());
             System.out.println("received : " + decrypted.get(i).toString());
@@ -39,8 +41,7 @@ public class Operation {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
             res = connectToDatabase.updateInformation(decrypted.get(1).toString(),
                     decrypted.get(2).toString(),
-                    decrypted.get(3).toString(),
-                    decrypted.get(4).toString());
+                    decrypted.get(3).toString());
         }
         return res;
     }
