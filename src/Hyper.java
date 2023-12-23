@@ -1,6 +1,7 @@
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
 import java.security.*;
+import java.security.KeyPair;
 
 public class Hyper {
         // Rivest Shamir Adleman
@@ -27,34 +28,15 @@ public class Hyper {
         public static String decrypt(String cipherText, PrivateKey privateKey)
                         throws Exception {
                 byte[] cipherTextByte = DatatypeConverter.parseHexBinary(cipherText);
+
                 Cipher cipher = Cipher.getInstance(RSA);
-                cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+                cipher.init(Cipher.DECRYPT_MODE,
+                                privateKey);
                 byte[] result = cipher.doFinal(cipherTextByte);
 
                 return new String(result);
         }
 
-        public static String decreptsecretkeyserver(byte[] cipherText, PrivateKey privateKey)
-                        throws Exception {
-                Cipher cipher = Cipher.getInstance(RSA);
 
-                cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                byte[] result = cipher.doFinal(cipherText);
-
-                return new String(result);
-        }
-
-        public static void main(String[] args) {
-                try {
-                        System.out.println(
-                                        DatatypeConverter.printHexBinary(generateKeyPair().getPublic().getEncoded()));
-                        System.out.println(
-                                        "-------------------------------------------------------------------------------------------------------------------------------------------");
-                        System.out.println(
-                                        DatatypeConverter.printHexBinary(generateKeyPair().getPrivate().getEncoded()));
-
-                } catch (Exception e) {
-                        e.printStackTrace();
-                }
-        }
 }

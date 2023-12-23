@@ -5,6 +5,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import javax.xml.bind.DatatypeConverter;
@@ -13,16 +14,18 @@ public class Symmetric {
 
     static SecretKey symmetricKey;
     private static final String key = "aesEncryptionKey";
+    private static int keyBitSize = 256;
 
-    // Function to create a secret key
     // Function to create a secret key
     public static SecretKey createAESKey(String nationalNumber) throws Exception {
 
+        // Password Base Key Derivation Function 2 Hash Massage Authentication Code With
+        // Secure Hash Algorithm 512
         // Step 1: Create a SecretKeyFactory using PBKDF2
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
 
         // Step 2: Create a KeySpec using the provided password and key as salt
-        KeySpec keySpec = new PBEKeySpec(nationalNumber.toCharArray(), key.getBytes(), 1, 256);
+        KeySpec keySpec = new PBEKeySpec(nationalNumber.toCharArray(), key.getBytes(), 1, keyBitSize);
 
         // Step 3: Generate a secret key using the SecretKeyFactory and KeySpec
         SecretKey secretKeyFromPBKDF2 = secretKeyFactory.generateSecret(keySpec);
@@ -67,9 +70,12 @@ public class Symmetric {
     }
 
     public static SecretKey GenerateSessionKey() throws NoSuchAlgorithmException {
-        KeyGenerator keygenerator = KeyGenerator.getInstance("AES");
-        symmetricKey = keygenerator.generateKey();
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+        SecureRandom secureRandom = new SecureRandom();
+        keyGenerator.init(keyBitSize, secureRandom);
+        symmetricKey = keyGenerator.generateKey();
         return symmetricKey;
+
     }
 
     public static void main(String[] args) {

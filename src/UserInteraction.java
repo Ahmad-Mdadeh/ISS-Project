@@ -12,20 +12,20 @@ public class UserInteraction {
 
     private Socket socket;
     private ObjectOutputStream objectOut;
-    private String EncryptType;
+    private String encryptType;
     private Scanner sc;
     private String permissions;
     private boolean isExit;
     String nationalNumber;
     SecretKey symmetricKey;
+    SecretKey sessionKey;
 
-    public UserInteraction(Socket socket, ObjectOutputStream objectOut, String EncryptType) {
+    public UserInteraction(Socket socket, ObjectOutputStream objectOut, String encryptType, SecretKey sessionKey) {
         this.socket = socket;
         this.objectOut = objectOut;
-        this.EncryptType = EncryptType;
+        this.encryptType = encryptType;
         this.sc = new Scanner(System.in);
-        this.permissions = "";
-        this.symmetricKey = null;
+        this.sessionKey = sessionKey;
         this.nationalNumber = "";
         this.isExit = false;
 
@@ -57,6 +57,9 @@ public class UserInteraction {
                             if (!(request.get(0).equals("exit"))) {
                                 processRequest(request);
                             } else {
+                                System.out.println(
+                                        "----------------------------------------------------------------------------------------------------------------------------\n");
+
                                 isExit = true;
                                 System.out.println("Exit");
                                 break;
@@ -171,11 +174,11 @@ public class UserInteraction {
         ArrayList<String> encryptedRequest = new ArrayList<>();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        if (EncryptType.equals("0")) {
+        if (encryptType.equals("0")) {
             objectOut.writeObject(request);
             response = in.readLine();
             System.out.println("Server replied ===> " + response);
-        } else if (EncryptType.equals("1")) {
+        } else if (encryptType.equals("1")) {
             if (!request.get(0).equals("login")) {
                 symmetricKey = Symmetric.createAESKey(nationalNumber);
                 System.out.println(
@@ -193,10 +196,29 @@ public class UserInteraction {
                     "----------------------------------------------------------------------------------------------------------------------------");
             objectOut.writeObject(encryptedRequest);
             response = in.readLine();
-            permissions = in.readLine();
+            this.permissions = in.readLine();
             System.out.println("Server replied ===> " + response);
-        } else if (EncryptType.equals("2")) {
-            // Handle case when EncryptType is 2
+        } else if (encryptType.equals("2")) {
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("The Symmetric Key is: " + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
+            encryptedRequest = Symmetric.encryptAES(request, sessionKey);
+            System.out.println(encryptedRequest.get(1));
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("Request sent!!");
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            objectOut.writeObject(encryptedRequest);
+            // get plain response
+            response = in.readLine();
+            this.permissions = in.readLine();
+            System.out.println("Server replied ===> " + response);
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            if (!response.contains("Successful")) {
+                startInteraction();
+            }
         }
 
     }

@@ -157,11 +157,45 @@ public class ConnectToDatabase {
                 selectStatement.setInt(1, id);
                 try (ResultSet updatedUser = selectStatement.executeQuery()) {
                     if (updatedUser.next()) {
-                        return "Update Information Successful !!! " + "id : " + id +
+                        return "Update Information Successful !!! " + permissions + "! " + "id : " + id +
                                 ", Name : " + updatedUser.getString("name") +
                                 ", Phone : " + updatedUser.getString("phone") +
                                 ", Address : " + updatedUser.getString("address") +
                                 ", Age : " + updatedUser.getString("age");
+                    } else {
+                        return "No user found with ID: " + id;
+                    }
+                }
+            } else {
+                return "No user found with ID: " + id;
+            }
+
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+            return "Update Information failed !!! " + "id : " + id;
+        }
+    }
+
+    public String setPracticalProjects(String project) {
+        try (Connection connection = this.connect();
+                PreparedStatement updateStatement = connection.prepareStatement(
+                        "UPDATE users SET practicalprojects=? WHERE id=?");
+                PreparedStatement selectStatement = connection.prepareStatement(
+                        "SELECT * FROM `users` WHERE id=?")) {
+
+            // Update user information
+            updateStatement.setString(1, project);
+            updateStatement.setInt(2, id);
+
+            int affectedRows = updateStatement.executeUpdate();
+
+            if (affectedRows > 0) {
+                // If update was successful, retrieve updated user information
+                selectStatement.setInt(1, id);
+                try (ResultSet updatedUser = selectStatement.executeQuery()) {
+                    if (updatedUser.next()) {
+                        return "Update Information Successful !!! " + "id : " + id +
+                                ", Project And Description: " + updatedUser.getString("practicalprojects").split(":");
                     } else {
                         return "No user found with ID: " + id;
                     }

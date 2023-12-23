@@ -12,16 +12,18 @@ public class InformationUpdater {
 
     private Socket socket;
     private ObjectOutputStream objectOut;
-    private String EncryptType;
+    private String encryptType;
     private SecretKey symmetricKey;
+    private SecretKey sessionKey;
     private Scanner sc;
     private boolean isExit;
     String nationalNumber;
 
-    public InformationUpdater(Socket socket, ObjectOutputStream objectOut, String EncryptType) {
+    public InformationUpdater(Socket socket, ObjectOutputStream objectOut, String encryptType, SecretKey sessionKey) {
         this.socket = socket;
         this.objectOut = objectOut;
-        this.EncryptType = EncryptType;
+        this.encryptType = encryptType;
+        this.sessionKey = sessionKey;
         this.sc = new Scanner(System.in);
         this.isExit = false;
 
@@ -35,7 +37,7 @@ public class InformationUpdater {
         this.nationalNumber = nationalNumber;
     }
 
-    public void updateInformation() {
+    public void setInformation() {
         ArrayList<String> request = getUserInput();
         try {
             if (!request.get(0).equals("exit"))
@@ -69,7 +71,7 @@ public class InformationUpdater {
             request.add(sc.nextLine());
             System.out.print("Age: ");
             request.add(sc.nextLine());
-        
+
             return request;
         }
 
@@ -80,11 +82,11 @@ public class InformationUpdater {
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         ArrayList<String> encryptedRequest = new ArrayList<>();
 
-        if (EncryptType.equals("0")) {
+        if (encryptType.equals("0")) {
             objectOut.writeObject(request);
             response = in.readLine();
             System.out.println("Server replied ===> " + response);
-        } else if (EncryptType.equals("1")) {
+        } else if (encryptType.equals("1")) {
             symmetricKey = Symmetric.createAESKey(nationalNumber);
             System.out.println(
                     "----------------------------------------------------------------------------------------------------------------------------");
@@ -94,6 +96,22 @@ public class InformationUpdater {
             System.out.println(
                     "----------------------------------------------------------------------------------------------------------------------------");
             System.out.println("Request sent!!");
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            objectOut.writeObject(encryptedRequest);
+            // get plain response
+            response = in.readLine();
+            System.out.println("Server replied ===> " + response);
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+        } else if (encryptType.equals("2")) {
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("The Session Key is: " + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
+            encryptedRequest = Symmetric.encryptAES(request, sessionKey);
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("Request sent !!");
             System.out.println(
                     "----------------------------------------------------------------------------------------------------------------------------");
             objectOut.writeObject(encryptedRequest);

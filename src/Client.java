@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.*;
 import javax.crypto.SecretKey;
@@ -11,18 +13,36 @@ class Client {
 	private ObjectInputStream objectIn = null;
 	private Socket socket = null;
 	private Scanner sc = null;
-	String EncryptType = "";
-	SecretKey symmetricKey;
+	String encryptType = "";
+	SecretKey sessionKey;
 	PublicKey publicKeyFromServer = null;
-	byte[] EncryptedSessionKey = null;
+	byte[] encryptedSessionKey = null;
 	String permissions = "";
+	BufferedReader in;
 
 	// driver code
 	public Client(String address, int port) {
-		boolean check = false;
-
+		KeyPair keyPair;
+		PublicKey publicKey = null;
+		PrivateKey privateKey = null;
 		PrintWriter printWriterOut = null;
 		try {
+
+			// create Public and Private keys
+			keyPair = Hyper.generateKeyPair();
+			publicKey = keyPair.getPublic();
+			privateKey = keyPair.getPrivate();
+
+			// System.out.println(
+			// "The Public Key is: "
+			// + DatatypeConverter.printHexBinary(
+			// publicKey.getEncoded()));
+			// System.out.println(
+			// "----------------------------------------------------------------------------------------------------------------------------");
+			// System.out.println(
+			// "The Private Key is: "
+			// + DatatypeConverter.printHexBinary(
+			// privateKey.getEncoded()));
 
 			// creating an object of socket
 			socket = new Socket(address, port);
@@ -36,48 +56,51 @@ class Client {
 			objectOut = new ObjectOutputStream(socket.getOutputStream());
 			objectIn = new ObjectInputStream(socket.getInputStream());
 			printWriterOut = new PrintWriter(socket.getOutputStream(), true);
-
+			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintStream printStream = new PrintStream(socket.getOutputStream());
 
 			System.out
 					.println("Enter:  0 for no Encryption\n\t1 for symmetric Encryption\n\t2 forAsymmetric Encryption");
 			System.out.print(
 					"Your Option : ");
-			this.EncryptType = sc.nextLine();
+			this.encryptType = sc.nextLine();
 
-			while (!(this.EncryptType.equals("0") || this.EncryptType.equals("1") || this.EncryptType.equals("2"))) {
+			while (!(this.encryptType.equals("0") || this.encryptType.equals("1") || this.encryptType.equals("2"))) {
 				System.out.print(
 						"Please Try again : ");
-				this.EncryptType = sc.nextLine();
+				this.encryptType = sc.nextLine();
 			}
 
-			printStream.println(this.EncryptType);
+			printStream.println(this.encryptType);
 
-			if (this.EncryptType.equals("2")) {
+			if (this.encryptType.equals("2")) {
 				// received Public Key From Server
 				publicKeyFromServer = (PublicKey) objectIn.readObject();
 
 				// generateSessionKey
-				symmetricKey = Symmetric.GenerateSessionKey();
+				sessionKey = Symmetric.GenerateSessionKey();
 
 				System.out.println(
 						"----------------------------------------------------------------------------------------------------------------------------");
 				System.out
-						.println("The Session Key is :" + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
-				EncryptedSessionKey = Hyper.encrept(DatatypeConverter.printHexBinary(symmetricKey.getEncoded()),
+						.println("The Session Key is :" + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
+				encryptedSessionKey = Hyper.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
 						publicKeyFromServer);
 				System.out.println(
 						"----------------------------------------------------------------------------------------------------------------------------");
 				System.out.println(
-						"The Encrypted Session Key is :" + DatatypeConverter.printHexBinary(EncryptedSessionKey));
+						"The Encrypted Session Key is :" + DatatypeConverter.printHexBinary(encryptedSessionKey));
+				System.out.println(
+						"----------------------------------------------------------------------------------------------------------------------------");
 
 				// Send the Encrypted Session Key to Server
-				printWriterOut.println(DatatypeConverter.printHexBinary(EncryptedSessionKey));
+				printWriterOut.println(DatatypeConverter.printHexBinary(encryptedSessionKey));
 
+				System.out.println(in.readLine());
 			}
 
 			// UserInteraction
-			UserInteraction userInteraction = new UserInteraction(socket, objectOut, EncryptType);
+			UserInteraction userInteraction = new UserInteraction(socket, objectOut, encryptType, sessionKey);
 			userInteraction.startInteraction();
 
 			System.out.println(
@@ -88,9 +111,19 @@ class Client {
 			}
 
 			// InformationUpdater
-			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut, EncryptType);
+			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut, encryptType, sessionKey);
 			informationUpdater.setNationalNumber(userInteraction.getNationalNumber());
-			informationUpdater.updateInformation();
+			informationUpdater.setInformation();
+
+			System.out.println(
+					"----------------------------------------------------------------------------------------------------------------------------\n");
+
+			if (userInteraction.getIsExit()) {
+				return;
+			}
+
+			PracticalProjects practicalProjects = new PracticalProjects(socket, objectOut, sessionKey);
+			practicalProjects.setDescriptionOfPracticalProjects();
 
 			System.out.println(
 					"----------------------------------------------------------------------------------------------------------------------------\n");

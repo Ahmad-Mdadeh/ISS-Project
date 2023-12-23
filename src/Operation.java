@@ -1,21 +1,17 @@
 import java.util.ArrayList;
 
+import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
 
 public class Operation {
     ArrayList<String> decrypted = new ArrayList<>();
     String res;
-    static String nationalNumber;
 
-    public void setNationalNumber(String nationalNumber) {
-        Operation.nationalNumber = nationalNumber;
-    }
-
-    ArrayList<String> decrypt(ArrayList<String> EncryptedRequest) throws Exception {
+    ArrayList<String> decrypt(ArrayList<String> EncryptedRequest, SecretKey symmetricKey) throws Exception {
         System.out.println("The Symmetric Key is :"
                 + DatatypeConverter.printHexBinary(
-                        Symmetric.createAESKey(nationalNumber).getEncoded()));
-        return Symmetric.decryptAES(EncryptedRequest, Symmetric.createAESKey(nationalNumber));
+                        symmetricKey.getEncoded()));
+        return Symmetric.decryptAES(EncryptedRequest, symmetricKey);
 
     }
 
@@ -42,6 +38,9 @@ public class Operation {
             res = connectToDatabase.updateInformation(decrypted.get(1).toString(),
                     decrypted.get(2).toString(),
                     decrypted.get(3).toString());
+        } else if (decrypted.get(0).toString().equals("projects")) {
+            ConnectToDatabase connectToDatabase = new ConnectToDatabase();
+            res = connectToDatabase.setPracticalProjects(decrypted.get(1).toString());
         }
         return res;
     }
