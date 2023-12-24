@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -40,8 +41,7 @@ public class PracticalProjects {
                     if (!(request.get(0).equals("exit"))) {
                         processRequest(request);
                     } else {
-                        System.out.println(
-                                "----------------------------------------------------------------------------------------------------------------------------\n");
+                        System.out.println("-------------------------------------------------------------------------");
                         isExit = true;
                         System.out.println("Exit");
                         break;
@@ -61,17 +61,13 @@ public class PracticalProjects {
             request.add("exit");
             return request;
         } else {
-            System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("-------------------------------------------------------------------------");
             request.add("projects");
-
             System.out.print("Enter Name Of the Projects : ");
             String projects = sc.nextLine();
             System.out.print("Enter Description Of the Projects : ");
             String description = sc.nextLine();
-
             request.add(projects + ":" + description);
-
             return request;
         }
     }
@@ -80,22 +76,19 @@ public class PracticalProjects {
         String response = "";
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         ArrayList<String> encryptedRequest = new ArrayList<>();
-
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        PrintStream printStream = new PrintStream(socket.getOutputStream());
+        printStream.println("pgp");
+        System.out.println("-------------------------------------------------------------------------");
         System.out.println("The Session Key is: " + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
         encryptedRequest = SymmetricCryptography.encryptAES(request, sessionKey);
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------");
         System.out.println("Request sent!!");
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------");
         objectOut.writeObject(encryptedRequest);
         // get plain response
         response = in.readLine();
         System.out.println("Server replied ===> " + response);
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------");
 
     }
 }

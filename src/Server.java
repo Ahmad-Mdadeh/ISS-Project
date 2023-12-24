@@ -1,20 +1,15 @@
 import java.io.*;
 import java.net.*;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
-
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-//  TLS handshake (Transport Layer Security)
 // Server class 
 class Server {
 	static KeyPair keyPair;
-	private static PublicKey publicKey = null;
-	private static PrivateKey privateKey = null;
 
 	public static void main(String[] args) {
 		ServerSocket server = null;
@@ -27,8 +22,7 @@ class Server {
 
 			// create Public and Private keys
 			keyPair = KeyGenerator.generateKeyPair();
-			publicKey = keyPair.getPublic();
-			privateKey = keyPair.getPrivate();
+
 			System.out.println("-------------------------------------------------------------------------");
 			System.out.println("Ther Public and Privet Key Hava Been Sent !!");
 			System.out.println("-------------------------------------------------------------------------");
@@ -83,7 +77,6 @@ class Server {
 			BufferedReader encryptTypeIn = null;
 			BufferedReader encryptedSessionKeyIn = null;
 
-			PrintWriter printWriterOut = null;
 			ObjectOutputStream ObjectdataOut = null;
 			PrintStream printStream = null;
 			try {
@@ -96,37 +89,18 @@ class Server {
 				inObj = new ObjectInputStream(clientSocket.getInputStream());
 				encryptTypeIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 				encryptedSessionKeyIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-				printWriterOut = new PrintWriter(outObj, true);
 				printStream = new PrintStream(outObj);
-				getEncryptedSessionKey(encryptedSessionKeyIn, ObjectdataOut, printStream);
 
-				// if (this.encryptType.equals("2")) {
-				// // Send Serve public Key
-				// PublicKey publicKey = keyPair.getPublic();
-				// ObjectdataOut.writeObject(publicKey);
-				// // receive the Encrypt Session Key
-				// String encryptedSessionKey = encryptedSessionKeyIn.readLine();
-				// decryptSessionKey = KeyGenerator.decrypt(encryptedSessionKey,
-				// keyPair.getPrivate());
-				// System.out.println("The Session Key is :" + decryptSessionKey);
-				// System.out.println(
-				// "----------------------------------------------------------------------------------------------------------------------------");
-				// printStream.println("The Session Key Has Been Received By The Server !!");
-				// }
+				getEncryptedSessionKey(encryptedSessionKeyIn, ObjectdataOut, printStream);
 
 				while (true) {
 					this.encryptType = encryptTypeIn.readLine();
-					System.out.println("==============");
-					System.out.println(this.encryptType);
 
 					// writing the received message from client
 					System.out.println("new request");
 
 					received = (ArrayList<String>) inObj.readObject();
 					Operation operation = new Operation();
-
-					System.out.println("==============");
-					System.out.println(received);
 
 					switch (this.encryptType) {
 						case "symmetric":
@@ -138,7 +112,7 @@ class Server {
 									decryptSessionKeyByte.length, "AES");
 							decrypt = operation.decrypt(received, secretKey);
 							break;
-						case "No":
+						case "no":
 							decrypt = received;
 							break;
 						default:
@@ -176,8 +150,7 @@ class Server {
 			}
 		}
 
-		private void getEncryptedSessionKey(BufferedReader encryptedSessionKeyIn, ObjectOutputStream ObjectdataOut,
-				PrintStream printStream) throws IOException, Exception {
+		private void getEncryptedSessionKey(BufferedReader encryptedSessionKeyIn, ObjectOutputStream ObjectdataOut, PrintStream printStream) throws Exception {
 			// Send the public Key to client
 			PublicKey publicKey = keyPair.getPublic();
 			ObjectdataOut.writeObject(publicKey);

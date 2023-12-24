@@ -167,12 +167,15 @@ public class UserInteraction {
         PrintStream printStream = new PrintStream(socket.getOutputStream());
 
         if (request.get(0).equals("signup")) {
+            printStream.println("symmetric");
             symmetricKey = SymmetricCryptography.createAESKey(nationalNumber);
             System.out.println(
                     "The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
             encryptedRequest = SymmetricCryptography.encryptAES(request, symmetricKey);
             System.out.println("-------------------------------------------------------------------------");
+
         } else {
+            printStream.println("no");
             encryptedRequest = request;
             System.out.println("-------------------------------------------------------------------------");
         }
@@ -183,7 +186,6 @@ public class UserInteraction {
         response = in.readLine();
         this.permissions = in.readLine();
         System.out.println("Server replied ===> " + response);
-
 
     }
 

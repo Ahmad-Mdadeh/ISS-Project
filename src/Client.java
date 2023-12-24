@@ -22,15 +22,11 @@ class Client {
 	// driver code
 	public Client(String address, int port) {
 		KeyPair keyPair;
-		PublicKey publicKey = null;
-		PrivateKey privateKey = null;
 		PrintWriter printWriterOut = null;
 		try {
 
 			// create Public and Private keys
 			keyPair = KeyGenerator.generateKeyPair();
-			publicKey = keyPair.getPublic();
-			privateKey = keyPair.getPrivate();
 
 			// System.out.println(
 			// "The Public Key is: "
@@ -53,12 +49,10 @@ class Client {
 			objectIn = new ObjectInputStream(socket.getInputStream());
 			printWriterOut = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			PrintStream printStream = new PrintStream(socket.getOutputStream());
 
 			extracted(printWriterOut);
 
 			// UserInteraction
-			printStream.println("No");
 			UserInteraction userInteraction = new UserInteraction(socket, objectOut);
 			userInteraction.startInteraction();
 
@@ -70,7 +64,6 @@ class Client {
 			}
 
 			// InformationUpdater
-			printStream.println("symmetric");
 			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut);
 			informationUpdater.setNationalNumber(userInteraction.getNationalNumber());
 			informationUpdater.setInformation();
@@ -82,7 +75,6 @@ class Client {
 				return;
 			}
 
-			printStream.println("pgp");
 			PracticalProjects practicalProjects = new PracticalProjects(socket, objectOut, sessionKey);
 			practicalProjects.setDescriptionOfPracticalProjects();
 
@@ -107,8 +99,7 @@ class Client {
 		}
 	}
 
-	private void extracted(PrintWriter printWriterOut)
-			throws IOException, ClassNotFoundException, NoSuchAlgorithmException, Exception {
+	private void extracted(PrintWriter printWriterOut) throws Exception {
 		// received Public Key From Server
 		publicKeyFromServer = (PublicKey) objectIn.readObject();
 
