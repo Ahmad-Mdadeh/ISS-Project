@@ -11,7 +11,7 @@ public class Operation {
         System.out.println("The Symmetric Key is :"
                 + DatatypeConverter.printHexBinary(
                         symmetricKey.getEncoded()));
-        return Symmetric.decryptAES(EncryptedRequest, symmetricKey);
+        return SymmetricCryptography.decryptAES(EncryptedRequest, symmetricKey);
 
     }
 

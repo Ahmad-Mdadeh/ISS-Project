@@ -1,10 +1,10 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
 
@@ -12,20 +12,16 @@ public class UserInteraction {
 
     private Socket socket;
     private ObjectOutputStream objectOut;
-    private String encryptType;
     private Scanner sc;
     private String permissions;
     private boolean isExit;
     String nationalNumber;
     SecretKey symmetricKey;
-    SecretKey sessionKey;
 
-    public UserInteraction(Socket socket, ObjectOutputStream objectOut, String encryptType, SecretKey sessionKey) {
+    public UserInteraction(Socket socket, ObjectOutputStream objectOut) {
         this.socket = socket;
         this.objectOut = objectOut;
-        this.encryptType = encryptType;
         this.sc = new Scanner(System.in);
-        this.sessionKey = sessionKey;
         this.nationalNumber = "";
         this.isExit = false;
 
@@ -58,8 +54,7 @@ public class UserInteraction {
                                 processRequest(request);
                             } else {
                                 System.out.println(
-                                        "----------------------------------------------------------------------------------------------------------------------------\n");
-
+                                        "-------------------------------------------------------------------------");
                                 isExit = true;
                                 System.out.println("Exit");
                                 break;
@@ -82,8 +77,7 @@ public class UserInteraction {
     private ArrayList<String> getUserLogin() {
 
         ArrayList<String> request = new ArrayList<>();
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------");
         System.out.println("Enter:  E or e to exit.\n\tL or l to login.");
         System.out.print("Your Option : ");
         String tmp = sc.nextLine();
@@ -93,8 +87,7 @@ public class UserInteraction {
             tmp = sc.nextLine();
         }
 
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------");
 
         switch (tmp) {
             case "E":
@@ -117,8 +110,7 @@ public class UserInteraction {
 
         ArrayList<String> request = new ArrayList<>();
 
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------");
 
         System.out.println("Enter:  E or e to exit.\n\tS or s to User Registration.");
         System.out.print("Your Option : ");
@@ -130,8 +122,7 @@ public class UserInteraction {
             tmp = sc.nextLine();
         }
 
-        System.out.println(
-                "----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------");
 
         switch (tmp) {
             case "E":
@@ -173,53 +164,26 @@ public class UserInteraction {
         String response;
         ArrayList<String> encryptedRequest = new ArrayList<>();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintStream printStream = new PrintStream(socket.getOutputStream());
 
-        if (encryptType.equals("0")) {
-            objectOut.writeObject(request);
-            response = in.readLine();
-            System.out.println("Server replied ===> " + response);
-        } else if (encryptType.equals("1")) {
-            if (!request.get(0).equals("login")) {
-                symmetricKey = Symmetric.createAESKey(nationalNumber);
-                System.out.println(
-                        "The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
-                encryptedRequest = Symmetric.encryptAES(request, symmetricKey);
-                System.out.println(
-                        "----------------------------------------------------------------------------------------------------------------------------");
-            } else {
-                encryptedRequest = request;
-                System.out.println(
-                        "----------------------------------------------------------------------------------------------------------------------------");
-            }
-            System.out.println("request sent !!");
+        if (request.get(0).equals("signup")) {
+            symmetricKey = SymmetricCryptography.createAESKey(nationalNumber);
             System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
-            objectOut.writeObject(encryptedRequest);
-            response = in.readLine();
-            this.permissions = in.readLine();
-            System.out.println("Server replied ===> " + response);
-        } else if (encryptType.equals("2")) {
-            System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
-            System.out.println("The Symmetric Key is: " + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
-            encryptedRequest = Symmetric.encryptAES(request, sessionKey);
-            System.out.println(encryptedRequest.get(1));
-            System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
-            System.out.println("Request sent!!");
-            System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
-            objectOut.writeObject(encryptedRequest);
-            // get plain response
-            response = in.readLine();
-            this.permissions = in.readLine();
-            System.out.println("Server replied ===> " + response);
-            System.out.println(
-                    "----------------------------------------------------------------------------------------------------------------------------");
-            if (!response.contains("Successful")) {
-                startInteraction();
-            }
+                    "The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
+            encryptedRequest = SymmetricCryptography.encryptAES(request, symmetricKey);
+            System.out.println("-------------------------------------------------------------------------");
+        } else {
+            encryptedRequest = request;
+            System.out.println("-------------------------------------------------------------------------");
         }
+        System.out.println("request sent !!");
+        System.out.println("-------------------------------------------------------------------------");
+        objectOut.writeObject(encryptedRequest);
+
+        response = in.readLine();
+        this.permissions = in.readLine();
+        System.out.println("Server replied ===> " + response);
+
 
     }
 

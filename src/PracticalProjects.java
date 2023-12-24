@@ -84,7 +84,7 @@ public class PracticalProjects {
         System.out.println(
                 "----------------------------------------------------------------------------------------------------------------------------");
         System.out.println("The Session Key is: " + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
-        encryptedRequest = Symmetric.encryptAES(request, sessionKey);
+        encryptedRequest = SymmetricCryptography.encryptAES(request, sessionKey);
         System.out.println(
                 "----------------------------------------------------------------------------------------------------------------------------");
         System.out.println("Request sent!!");

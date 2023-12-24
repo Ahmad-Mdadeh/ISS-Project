@@ -1,6 +1,5 @@
 
 import java.security.*;
-import java.security.KeyPair;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -34,7 +33,7 @@ public class DigitalSignature {
 
                 String input = "GEEKSFORGEEKS IS A"
                                 + " COMPUTER SCIENCE PORTAL";
-                KeyPair keyPair = Hyper.generateKeyPair();
+                KeyPair keyPair = KeyGenerator.generateKeyPair();
 
                 // Function Call
                 byte[] signature = CreatingDigitalSignature(

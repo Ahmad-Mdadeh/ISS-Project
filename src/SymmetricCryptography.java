@@ -10,7 +10,7 @@ import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import javax.xml.bind.DatatypeConverter;
 
-public class Symmetric {
+public class SymmetricCryptography {
 
     static SecretKey symmetricKey;
     private static final String key = "aesEncryptionKey";
@@ -19,10 +19,13 @@ public class Symmetric {
     // Function to create a secret key
     public static SecretKey createAESKey(String nationalNumber) throws Exception {
 
-        // Password Base Key Derivation Function 2 Hash Massage Authentication Code With
-        // Secure Hash Algorithm 512
         // Step 1: Create a SecretKeyFactory using PBKDF2
-        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512"); // Password Base Key
+                                                                                                  // Derivation Function
+                                                                                                  // 2 Hash Massage
+                                                                                                  // Authentication Code
+                                                                                                  // With Secure Hash
+                                                                                                  // Algorithm 512
 
         // Step 2: Create a KeySpec using the provided password and key as salt
         KeySpec keySpec = new PBEKeySpec(nationalNumber.toCharArray(), key.getBytes(), 1, keyBitSize);

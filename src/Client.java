@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.*;
@@ -12,9 +13,7 @@ class Client {
 	private ObjectOutputStream objectOut = null;
 	private ObjectInputStream objectIn = null;
 	private Socket socket = null;
-	private Scanner sc = null;
-	String encryptType = "";
-	SecretKey sessionKey;
+	SecretKey sessionKey = null;
 	PublicKey publicKeyFromServer = null;
 	byte[] encryptedSessionKey = null;
 	String permissions = "";
@@ -29,7 +28,7 @@ class Client {
 		try {
 
 			// create Public and Private keys
-			keyPair = Hyper.generateKeyPair();
+			keyPair = KeyGenerator.generateKeyPair();
 			publicKey = keyPair.getPublic();
 			privateKey = keyPair.getPrivate();
 
@@ -49,9 +48,6 @@ class Client {
 
 			System.out.println("Connection Established!! ");
 
-			// taking input from user
-			sc = new Scanner(System.in);
-
 			// opening output stream on the socket
 			objectOut = new ObjectOutputStream(socket.getOutputStream());
 			objectIn = new ObjectInputStream(socket.getInputStream());
@@ -59,48 +55,11 @@ class Client {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintStream printStream = new PrintStream(socket.getOutputStream());
 
-			System.out
-					.println("Enter:  0 for no Encryption\n\t1 for symmetric Encryption\n\t2 forAsymmetric Encryption");
-			System.out.print(
-					"Your Option : ");
-			this.encryptType = sc.nextLine();
-
-			while (!(this.encryptType.equals("0") || this.encryptType.equals("1") || this.encryptType.equals("2"))) {
-				System.out.print(
-						"Please Try again : ");
-				this.encryptType = sc.nextLine();
-			}
-
-			printStream.println(this.encryptType);
-
-			if (this.encryptType.equals("2")) {
-				// received Public Key From Server
-				publicKeyFromServer = (PublicKey) objectIn.readObject();
-
-				// generateSessionKey
-				sessionKey = Symmetric.GenerateSessionKey();
-
-				System.out.println(
-						"----------------------------------------------------------------------------------------------------------------------------");
-				System.out
-						.println("The Session Key is :" + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
-				encryptedSessionKey = Hyper.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
-						publicKeyFromServer);
-				System.out.println(
-						"----------------------------------------------------------------------------------------------------------------------------");
-				System.out.println(
-						"The Encrypted Session Key is :" + DatatypeConverter.printHexBinary(encryptedSessionKey));
-				System.out.println(
-						"----------------------------------------------------------------------------------------------------------------------------");
-
-				// Send the Encrypted Session Key to Server
-				printWriterOut.println(DatatypeConverter.printHexBinary(encryptedSessionKey));
-
-				System.out.println(in.readLine());
-			}
+			extracted(printWriterOut);
 
 			// UserInteraction
-			UserInteraction userInteraction = new UserInteraction(socket, objectOut, encryptType, sessionKey);
+			printStream.println("No");
+			UserInteraction userInteraction = new UserInteraction(socket, objectOut);
 			userInteraction.startInteraction();
 
 			System.out.println(
@@ -111,7 +70,8 @@ class Client {
 			}
 
 			// InformationUpdater
-			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut, encryptType, sessionKey);
+			printStream.println("symmetric");
+			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut);
 			informationUpdater.setNationalNumber(userInteraction.getNationalNumber());
 			informationUpdater.setInformation();
 
@@ -122,6 +82,7 @@ class Client {
 				return;
 			}
 
+			printStream.println("pgp");
 			PracticalProjects practicalProjects = new PracticalProjects(socket, objectOut, sessionKey);
 			practicalProjects.setDescriptionOfPracticalProjects();
 
@@ -144,6 +105,35 @@ class Client {
 		} catch (IOException io) {
 			System.out.println(io);
 		}
+	}
+
+	private void extracted(PrintWriter printWriterOut)
+			throws IOException, ClassNotFoundException, NoSuchAlgorithmException, Exception {
+		// received Public Key From Server
+		publicKeyFromServer = (PublicKey) objectIn.readObject();
+
+		// generateSessionKey
+		sessionKey = SymmetricCryptography.GenerateSessionKey();
+
+		System.out.println(
+				"----------------------------------------------------------------------------------------------------------------------------");
+		System.out
+				.println("The Session Key is :" +
+						DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
+		encryptedSessionKey = KeyGenerator.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
+				publicKeyFromServer);
+		System.out.println(
+				"----------------------------------------------------------------------------------------------------------------------------");
+		System.out.println(
+				"The Encrypted Session Key is :" +
+						DatatypeConverter.printHexBinary(encryptedSessionKey));
+		System.out.println(
+				"----------------------------------------------------------------------------------------------------------------------------");
+
+		// Send the Encrypted Session Key to Server
+		printWriterOut.println(DatatypeConverter.printHexBinary(encryptedSessionKey));
+
+		System.out.println(in.readLine());
 	}
 
 	public static void main(String argvs[]) {

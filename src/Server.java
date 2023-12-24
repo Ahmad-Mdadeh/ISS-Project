@@ -26,24 +26,12 @@ class Server {
 			server.setReuseAddress(true);
 
 			// create Public and Private keys
-			keyPair = Hyper.generateKeyPair();
+			keyPair = KeyGenerator.generateKeyPair();
 			publicKey = keyPair.getPublic();
 			privateKey = keyPair.getPrivate();
-			System.out.println(
-					"----------------------------------------------------------------------------------------------------------------------------");
+			System.out.println("-------------------------------------------------------------------------");
 			System.out.println("Ther Public and Privet Key Hava Been Sent !!");
-			System.out.println(
-					"----------------------------------------------------------------------------------------------------------------------------");
-			// System.out.println(
-			// "The Public Key is: "
-			// + DatatypeConverter.printHexBinary(
-			// publicKey.getEncoded()));
-			// System.out.println(
-			// "----------------------------------------------------------------------------------------------------------------------------");
-			// System.out.println(
-			// "The Private Key is: "
-			// + DatatypeConverter.printHexBinary(
-			// privateKey.getEncoded()));
+			System.out.println("-------------------------------------------------------------------------");
 
 			// running infinite loop for getting client request
 			while (true) {
@@ -110,45 +98,51 @@ class Server {
 				encryptedSessionKeyIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 				printWriterOut = new PrintWriter(outObj, true);
 				printStream = new PrintStream(outObj);
-				this.encryptType = encryptTypeIn.readLine();
+				getEncryptedSessionKey(encryptedSessionKeyIn, ObjectdataOut, printStream);
 
-				if (this.encryptType.equals("2")) {
-					// Send Serve public Key
-					PublicKey publicKey = keyPair.getPublic();
-					ObjectdataOut.writeObject(publicKey);
-					// receive the Encrypt Session Key
-					String encryptedSessionKey = encryptedSessionKeyIn.readLine();
-					decryptSessionKey = Hyper.decrypt(encryptedSessionKey, keyPair.getPrivate());
-					System.out.println("The Session Key is :" + decryptSessionKey);
-					System.out.println(
-							"----------------------------------------------------------------------------------------------------------------------------");
-					printStream.println("The Session Key Has Been Received By The Server !!");
-				}
+				// if (this.encryptType.equals("2")) {
+				// // Send Serve public Key
+				// PublicKey publicKey = keyPair.getPublic();
+				// ObjectdataOut.writeObject(publicKey);
+				// // receive the Encrypt Session Key
+				// String encryptedSessionKey = encryptedSessionKeyIn.readLine();
+				// decryptSessionKey = KeyGenerator.decrypt(encryptedSessionKey,
+				// keyPair.getPrivate());
+				// System.out.println("The Session Key is :" + decryptSessionKey);
+				// System.out.println(
+				// "----------------------------------------------------------------------------------------------------------------------------");
+				// printStream.println("The Session Key Has Been Received By The Server !!");
+				// }
 
 				while (true) {
-					// writing the received message from
-					// client
+					this.encryptType = encryptTypeIn.readLine();
+					System.out.println("==============");
+					System.out.println(this.encryptType);
+
+					// writing the received message from client
 					System.out.println("new request");
 
 					received = (ArrayList<String>) inObj.readObject();
 					Operation operation = new Operation();
 
-					// Decrypt the Received
-					if (this.encryptType.equals("1")) {
-						if (received.get(0).equals("login")) {
-							decrypt = received;
-						} else {
-							decrypt = operation.decrypt(received, Symmetric.createAESKey(symmetricKey));
-						}
-					} else if (this.encryptType.equals("2")) {
-						if (received.get(0).equals("login")) {
-							decrypt = received;
-						} else {
+					System.out.println("==============");
+					System.out.println(received);
+
+					switch (this.encryptType) {
+						case "symmetric":
+							decrypt = operation.decrypt(received, SymmetricCryptography.createAESKey(symmetricKey));
+							break;
+						case "pgp":
 							byte[] decryptSessionKeyByte = DatatypeConverter.parseHexBinary(decryptSessionKey);
 							SecretKey secretKey = new SecretKeySpec(decryptSessionKeyByte, 0,
 									decryptSessionKeyByte.length, "AES");
 							decrypt = operation.decrypt(received, secretKey);
-						}
+							break;
+						case "No":
+							decrypt = received;
+							break;
+						default:
+							break;
 					}
 
 					operation.getRequest(decrypt);
@@ -160,11 +154,12 @@ class Server {
 						if (3 <= resParts.length) {
 							this.symmetricKey = resParts[2];
 						}
-						System.out.print("Permission :");
+						System.out.print("Permission : ");
 						System.out.println(resParts[1]);
 
 					} else {
 						printStream.println(response);
+						printStream.println("-1");
 						System.out.println(response);
 					}
 					received.clear();
@@ -180,5 +175,20 @@ class Server {
 
 			}
 		}
+
+		private void getEncryptedSessionKey(BufferedReader encryptedSessionKeyIn, ObjectOutputStream ObjectdataOut,
+				PrintStream printStream) throws IOException, Exception {
+			// Send the public Key to client
+			PublicKey publicKey = keyPair.getPublic();
+			ObjectdataOut.writeObject(publicKey);
+			// receive the Encrypt Session Key
+			String encryptedSessionKey = encryptedSessionKeyIn.readLine();
+			decryptSessionKey = KeyGenerator.decrypt(encryptedSessionKey, keyPair.getPrivate());
+			System.out.println("The Session Key is :" + decryptSessionKey);
+			System.out.println("-------------------------------------------------------------------------");
+			printStream.println("The Session Key Has Been Received By The Server !!");
+
+		}
+
 	}
 }
