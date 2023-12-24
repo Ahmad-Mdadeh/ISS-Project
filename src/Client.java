@@ -1,43 +1,28 @@
 import java.io.*;
 import java.net.*;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 // Client class
 class Client {
 	private ObjectOutputStream objectOut = null;
-	private ObjectInputStream objectIn = null;
 	private Socket socket = null;
 	SecretKey sessionKey = null;
 	PublicKey publicKeyFromServer = null;
 	byte[] encryptedSessionKey = null;
 	String permissions = "";
 	BufferedReader in;
+	KeyPair keyPair;
+	PrintWriter printWriterOut = null;
 
 	// driver code
 	public Client(String address, int port) {
-		KeyPair keyPair;
-		PrintWriter printWriterOut = null;
+
 		try {
-
-			// create Public and Private keys
-			keyPair = KeyGenerator.generateKeyPair();
-
-			// System.out.println(
-			// "The Public Key is: "
-			// + DatatypeConverter.printHexBinary(
-			// publicKey.getEncoded()));
-			// System.out.println(
-			// "----------------------------------------------------------------------------------------------------------------------------");
-			// System.out.println(
-			// "The Private Key is: "
-			// + DatatypeConverter.printHexBinary(
-			// privateKey.getEncoded()));
 
 			// creating an object of socket
 			socket = new Socket(address, port);
@@ -46,42 +31,39 @@ class Client {
 
 			// opening output stream on the socket
 			objectOut = new ObjectOutputStream(socket.getOutputStream());
-			objectIn = new ObjectInputStream(socket.getInputStream());
 			printWriterOut = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-			extracted(printWriterOut);
+			getDecryptSessionKey();
 
 			// UserInteraction
 			UserInteraction userInteraction = new UserInteraction(socket, objectOut);
 			userInteraction.startInteraction();
 
-			System.out.println(
-					"----------------------------------------------------------------------------------------------------------------------------\n");
+			System.out.println("-------------------------------------------------------------------------");
 
 			if (userInteraction.getIsExit()) {
 				return;
 			}
 
 			// InformationUpdater
-			InformationUpdater informationUpdater = new InformationUpdater(socket, objectOut);
+			InformationUpdater informationUpdater = new InformationUpdater(socket,
+					objectOut);
 			informationUpdater.setNationalNumber(userInteraction.getNationalNumber());
 			informationUpdater.setInformation();
 
-			System.out.println(
-					"----------------------------------------------------------------------------------------------------------------------------\n");
+			System.out.println("-------------------------------------------------------------------------");
 
-			if (userInteraction.getIsExit()) {
+			if (informationUpdater.getIsExit()) {
 				return;
 			}
 
 			PracticalProjects practicalProjects = new PracticalProjects(socket, objectOut, sessionKey);
 			practicalProjects.setDescriptionOfPracticalProjects();
 
-			System.out.println(
-					"----------------------------------------------------------------------------------------------------------------------------\n");
+			System.out.println("-------------------------------------------------------------------------");
 
-			if (userInteraction.getIsExit()) {
+			if (practicalProjects.getIsExit()) {
 				return;
 			}
 
@@ -99,32 +81,34 @@ class Client {
 		}
 	}
 
-	private void extracted(PrintWriter printWriterOut) throws Exception {
-		// received Public Key From Server
-		publicKeyFromServer = (PublicKey) objectIn.readObject();
+	private void getDecryptSessionKey() throws Exception {
 
-		// generateSessionKey
-		sessionKey = SymmetricCryptography.GenerateSessionKey();
+		// create Public and Private keys
+		keyPair = KeyGenerator.generateKeyPair();
 
-		System.out.println(
-				"----------------------------------------------------------------------------------------------------------------------------");
+		// Send the public Key to client
+		PublicKey publicKey = keyPair.getPublic();
+		PrivateKey privateKey = keyPair.getPrivate();
+
+		objectOut.writeObject(publicKey);
+
+		System.out.println("-------------------------------------------------------------------------");
+		System.out.println("The client's public key is : " + DatatypeConverter.printHexBinary(publicKey.getEncoded()));
+		System.out.println("-------------------------------------------------------------------------");
 		System.out
-				.println("The Session Key is :" +
-						DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
-		encryptedSessionKey = KeyGenerator.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
-				publicKeyFromServer);
-		System.out.println(
-				"----------------------------------------------------------------------------------------------------------------------------");
-		System.out.println(
-				"The Encrypted Session Key is :" +
-						DatatypeConverter.printHexBinary(encryptedSessionKey));
-		System.out.println(
-				"----------------------------------------------------------------------------------------------------------------------------");
+				.println("The client's Private Key is : " + DatatypeConverter.printHexBinary(privateKey.getEncoded()));
+		System.out.println("-------------------------------------------------------------------------");
 
-		// Send the Encrypted Session Key to Server
-		printWriterOut.println(DatatypeConverter.printHexBinary(encryptedSessionKey));
+		String encryptedSessionKey = in.readLine();
+		String decryptSessionKey = KeyGenerator.decrypt(encryptedSessionKey, keyPair.getPrivate());
+		byte[] decryptSessionKeyByte = DatatypeConverter.parseHexBinary(decryptSessionKey);
 
-		System.out.println(in.readLine());
+		sessionKey = new SecretKeySpec(decryptSessionKeyByte, 0, decryptSessionKeyByte.length, "AES");
+
+		System.out.println("The Server's Session Key is : " + decryptSessionKey);
+		System.out.println("-------------------------------------------------------------------------");
+		System.out.println("Ther Public and Privet Key Hava Been Sent !!");
+
 	}
 
 	public static void main(String argvs[]) {

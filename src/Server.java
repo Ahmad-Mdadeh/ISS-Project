@@ -4,7 +4,6 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 // Server class 
@@ -20,12 +19,6 @@ class Server {
 			server = new ServerSocket(1234);
 			server.setReuseAddress(true);
 
-			// create Public and Private keys
-			keyPair = KeyGenerator.generateKeyPair();
-
-			System.out.println("-------------------------------------------------------------------------");
-			System.out.println("Ther Public and Privet Key Hava Been Sent !!");
-			System.out.println("-------------------------------------------------------------------------");
 
 			// running infinite loop for getting client request
 			while (true) {
@@ -64,7 +57,8 @@ class Server {
 		private final Socket clientSocket;
 		private String encryptType;
 		private String symmetricKey;
-		private String decryptSessionKey;
+		PrintWriter printWriterOut;
+		SecretKey sessionKey;
 
 		// Constructor
 		public ClientHandler(Socket socket) {
@@ -75,9 +69,6 @@ class Server {
 			OutputStream outObj = null;
 			ObjectInputStream inObj = null;
 			BufferedReader encryptTypeIn = null;
-			BufferedReader encryptedSessionKeyIn = null;
-
-			ObjectOutputStream ObjectdataOut = null;
 			PrintStream printStream = null;
 			try {
 				String response = "";
@@ -85,13 +76,12 @@ class Server {
 
 				// get the outputstream of client
 				outObj = clientSocket.getOutputStream();
-				ObjectdataOut = new ObjectOutputStream(outObj);
 				inObj = new ObjectInputStream(clientSocket.getInputStream());
 				encryptTypeIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-				encryptedSessionKeyIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 				printStream = new PrintStream(outObj);
+				printWriterOut = new PrintWriter(clientSocket.getOutputStream(), true);
 
-				getEncryptedSessionKey(encryptedSessionKeyIn, ObjectdataOut, printStream);
+				getEncryptedSessionKey(inObj);
 
 				while (true) {
 					this.encryptType = encryptTypeIn.readLine();
@@ -100,6 +90,7 @@ class Server {
 					System.out.println("new request");
 
 					received = (ArrayList<String>) inObj.readObject();
+
 					Operation operation = new Operation();
 
 					switch (this.encryptType) {
@@ -107,10 +98,8 @@ class Server {
 							decrypt = operation.decrypt(received, SymmetricCryptography.createAESKey(symmetricKey));
 							break;
 						case "pgp":
-							byte[] decryptSessionKeyByte = DatatypeConverter.parseHexBinary(decryptSessionKey);
-							SecretKey secretKey = new SecretKeySpec(decryptSessionKeyByte, 0,
-									decryptSessionKeyByte.length, "AES");
-							decrypt = operation.decrypt(received, secretKey);
+
+							decrypt = operation.decrypt(received, sessionKey);
 							break;
 						case "no":
 							decrypt = received;
@@ -150,17 +139,30 @@ class Server {
 			}
 		}
 
-		private void getEncryptedSessionKey(BufferedReader encryptedSessionKeyIn, ObjectOutputStream ObjectdataOut, PrintStream printStream) throws Exception {
-			// Send the public Key to client
-			PublicKey publicKey = keyPair.getPublic();
-			ObjectdataOut.writeObject(publicKey);
-			// receive the Encrypt Session Key
-			String encryptedSessionKey = encryptedSessionKeyIn.readLine();
-			decryptSessionKey = KeyGenerator.decrypt(encryptedSessionKey, keyPair.getPrivate());
-			System.out.println("The Session Key is :" + decryptSessionKey);
-			System.out.println("-------------------------------------------------------------------------");
-			printStream.println("The Session Key Has Been Received By The Server !!");
+		private void getEncryptedSessionKey(ObjectInputStream inObj) throws Exception {
 
+			PublicKey publicKeyFromClient = (PublicKey) inObj.readObject();
+
+			// generateSessionKey
+			sessionKey = SymmetricCryptography.GenerateSessionKey();
+
+			System.out.println("-------------------------------------------------------------------------");
+
+			System.out.println(
+					"The Server's Session Key is : " + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
+
+			byte[] encryptedSessionKey = KeyGenerator.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
+					publicKeyFromClient);
+
+			System.out.println("-------------------------------------------------------------------------");
+
+			System.out.println(
+					"The Server's Encrypted Session Key is : " + DatatypeConverter.printHexBinary(encryptedSessionKey));
+
+			System.out.println("-------------------------------------------------------------------------");
+
+			// Send the Encrypted Session Key to Server
+			printWriterOut.println(DatatypeConverter.printHexBinary(encryptedSessionKey));
 		}
 
 	}

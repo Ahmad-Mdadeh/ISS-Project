@@ -186,6 +186,12 @@ public class UserInteraction {
         response = in.readLine();
         this.permissions = in.readLine();
         System.out.println("Server replied ===> " + response);
+        if (!response.contains("Successful")) {
+            System.out.println("-------------------------------------------------------------------------");
+            System.out.println("Please Try Again");
+            startInteraction();
+
+        }
 
     }
 

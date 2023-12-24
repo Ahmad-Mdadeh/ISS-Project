@@ -111,11 +111,12 @@ public class ConnectToDatabase {
 
                     pass = VerifyingPasswords.hashedPassword(pass);
                     // Use PreparedStatement to prevent SQL injection
-                    String insertQuery = "INSERT INTO users (name, pass) VALUES (?, ?)";
+                    String insertQuery = "INSERT INTO users (name, pass,nationalNumber) VALUES (?, ?,?)";
                     try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery,
                             Statement.RETURN_GENERATED_KEYS)) {
                         preparedStatement.setString(1, name);
                         preparedStatement.setString(2, pass);
+                        preparedStatement.setString(3, nationalNumber);
 
                         preparedStatement.executeUpdate();
 
@@ -125,7 +126,6 @@ public class ConnectToDatabase {
                             }
                         }
                     }
-
                     return "SignUp Successful !!! " + permissions + "! " + id;
                 }
                 return "Connection error !!! ";
