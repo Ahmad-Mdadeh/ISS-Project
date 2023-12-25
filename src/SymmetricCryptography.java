@@ -10,6 +10,7 @@ import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import javax.xml.bind.DatatypeConverter;
 
+// Password Base Key  Derivation Function 2 Hash Massage Authentication Code With Secure Hash Algorithm 512
 public class SymmetricCryptography {
 
     static SecretKey symmetricKey;
@@ -20,12 +21,7 @@ public class SymmetricCryptography {
     public static SecretKey createAESKey(String nationalNumber) throws Exception {
 
         // Step 1: Create a SecretKeyFactory using PBKDF2
-        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512"); // Password Base Key
-                                                                                                  // Derivation Function
-                                                                                                  // 2 Hash Massage
-                                                                                                  // Authentication Code
-                                                                                                  // With Secure Hash
-                                                                                                  // Algorithm 512
+        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
 
         // Step 2: Create a KeySpec using the provided password and key as salt
         KeySpec keySpec = new PBEKeySpec(nationalNumber.toCharArray(), key.getBytes(), 1, keyBitSize);
@@ -79,24 +75,6 @@ public class SymmetricCryptography {
         symmetricKey = keyGenerator.generateKey();
         return symmetricKey;
 
-    }
-
-    public static void main(String[] args) {
-        try {
-            // Step 6: Generate the AES key using the createAESKey function
-            SecretKey key = createAESKey("your_password_here");
-
-            // Optional: Print the key in hexadecimal format
-            System.out.println(
-                    "Generated Key (Hex): " + javax.xml.bind.DatatypeConverter.printHexBinary(key.getEncoded()));
-            // System.out.println("=======================");
-            // ArrayList<String> s = encryptAES("TEST", key);
-            // System.out.println(s);
-            // System.out.println("+++++++++++++++++++++++");
-            // System.out.println(decryptAES(s, key));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 }

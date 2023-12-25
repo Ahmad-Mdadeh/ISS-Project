@@ -35,8 +35,12 @@ public class UserInteraction {
         return nationalNumber;
     }
 
+    public String getPermission() {
+        return permissions;
+    }
+
     public void startInteraction() throws Exception {
-        ArrayList<String> request = getUserLogin();
+        ArrayList<String> request = getUserInput();
         this.nationalNumber = request.get(3);
         if (!(request.get(0).equals("exit"))) {
             processRequest(request);
@@ -44,12 +48,12 @@ public class UserInteraction {
                 try {
                     if (permissions.equals("0")) {
                         request.clear();
-                        request = getUserRegistration();
+                        request = getUserInputRegistration();
                         if (!(request.get(0).equals("exit"))) {
                             processRequest(request);
                         } else {
                             request.clear();
-                            request = getUserLogin();
+                            request = getUserInput();
                             if (!(request.get(0).equals("exit"))) {
                                 processRequest(request);
                             } else {
@@ -74,7 +78,7 @@ public class UserInteraction {
         }
     }
 
-    private ArrayList<String> getUserLogin() {
+    private ArrayList<String> getUserInput() {
 
         ArrayList<String> request = new ArrayList<>();
         System.out.println("-------------------------------------------------------------------------");
@@ -106,7 +110,7 @@ public class UserInteraction {
         return request;
     }
 
-    private ArrayList<String> getUserRegistration() {
+    private ArrayList<String> getUserInputRegistration() {
 
         ArrayList<String> request = new ArrayList<>();
 

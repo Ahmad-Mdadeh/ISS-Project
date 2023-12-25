@@ -24,7 +24,7 @@ public class Operation {
 
     }
 
-    String auth() {
+    String insertIntoDataBase() {
         if (decrypted.get(0).toString().equals("login")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
             res = connectToDatabase.login(decrypted.get(1).toString(),
@@ -41,6 +41,10 @@ public class Operation {
         } else if (decrypted.get(0).toString().equals("projects")) {
             ConnectToDatabase connectToDatabase = new ConnectToDatabase();
             res = connectToDatabase.setPracticalProjects(decrypted.get(1).toString());
+        } else if (decrypted.get(0).toString().equals("mark")) {
+            ConnectToDatabase connectToDatabase = new ConnectToDatabase();
+            res = connectToDatabase.setMark(decrypted.get(1).toString(),
+                    decrypted.get(2).toString());
         }
         return res;
     }

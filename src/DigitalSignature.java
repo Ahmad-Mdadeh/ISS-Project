@@ -1,5 +1,6 @@
 
 import java.security.*;
+import java.util.ArrayList;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -7,22 +8,32 @@ public class DigitalSignature {
         static byte[] digitalSignature;
         static boolean verified;
 
-        public static byte[] CreatingDigitalSignature(byte[] data, PrivateKey privateKey) throws Exception {
-
+        public static byte[] createDigitalSignature(ArrayList<String> dataList, PrivateKey privateKey)
+                        throws Exception {
                 Signature signature = Signature.getInstance("SHA256withRSA");
                 SecureRandom secureRandom = new SecureRandom();
 
                 signature.initSign(privateKey, secureRandom);
-                signature.update(data);
-                digitalSignature = signature.sign();
+
+                for (String str : dataList) {
+                        signature.update(str.getBytes());
+                }
+
+                byte[] digitalSignature = signature.sign();
+              
                 return digitalSignature;
         }
 
-        public static boolean VerifyingDigitalSignature(byte[] data, byte[] signatureToVerify, PublicKey publicKey)
+        public static boolean verifyingDigitalSignature(ArrayList<String> dataList, byte[] signatureToVerify,
+                        PublicKey publicKey)
                         throws Exception {
                 Signature signature = Signature.getInstance("SHA256withRSA");
                 signature.initVerify(publicKey);
-                signature.update(data);
+
+                for (String str : dataList) {
+                        signature.update(str.getBytes());
+                }
+
                 verified = signature.verify(signatureToVerify);
                 return verified;
         }
@@ -31,24 +42,21 @@ public class DigitalSignature {
         public static void main(String args[])
                         throws Exception {
 
-                String input = "GEEKSFORGEEKS IS A"
-                                + " COMPUTER SCIENCE PORTAL";
+                ArrayList<String> input = new ArrayList<String>();
+                input.add("Hello World");
                 KeyPair keyPair = KeyGenerator.generateKeyPair();
 
                 // Function Call
-                byte[] signature = CreatingDigitalSignature(
-                                input.getBytes(),
-                                keyPair.getPrivate());
+                byte[] signature = createDigitalSignature(input, keyPair.getPrivate());
 
                 System.out.println(
                                 "Signature Value:\n"
                                                 + DatatypeConverter
                                                                 .printHexBinary(signature));
-
                 System.out.println(
                                 "Verification: "
-                                                + VerifyingDigitalSignature(
-                                                                input.getBytes(),
+                                                + verifyingDigitalSignature(
+                                                                input,
                                                                 signature, keyPair.getPublic()));
         }
 }

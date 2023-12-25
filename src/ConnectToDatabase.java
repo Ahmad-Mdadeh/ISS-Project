@@ -49,24 +49,6 @@ public class ConnectToDatabase {
         return result;
     }
 
-    public String checkPermissions(int id, Connection connection) {
-        String permissions = "";
-        try (
-                PreparedStatement preparedStatement = connection
-                        .prepareStatement("SELECT * FROM `users` WHERE id=?")) {
-
-            preparedStatement.setInt(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                permissions = resultSet.getString("permissions");
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        System.out.println(permissions);
-        return permissions;
-    }
-
     public String login(String name, String pass, String nationalNumber) {
 
         try (Connection connection = this.connect();
@@ -101,40 +83,38 @@ public class ConnectToDatabase {
     }
 
     public String signup(String name, String pass, String nationalNumber) {
-        if (checkPermissions(id, this.connect()).equals("0")) {
-            try (Connection connection = this.connect()) {
-                if (connection != null) {
-                    String availability = username(name, connection);
-                    if (!availability.equals("Username available")) {
-                        return availability;
-                    }
+        try (Connection connection = this.connect()) {
+            if (connection != null) {
+                String availability = username(name, connection);
+                if (!availability.equals("Username available")) {
+                    return availability;
+                }
 
-                    pass = VerifyingPasswords.hashedPassword(pass);
-                    // Use PreparedStatement to prevent SQL injection
-                    String insertQuery = "INSERT INTO users (name, pass,nationalNumber) VALUES (?, ?,?)";
-                    try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery,
-                            Statement.RETURN_GENERATED_KEYS)) {
-                        preparedStatement.setString(1, name);
-                        preparedStatement.setString(2, pass);
-                        preparedStatement.setString(3, nationalNumber);
+                pass = VerifyingPasswords.hashedPassword(pass);
+                // Use PreparedStatement to prevent SQL injection
+                String insertQuery = "INSERT INTO users (name, pass,nationalNumber) VALUES (?, ?,?)";
+                try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery,
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, name);
+                    preparedStatement.setString(2, pass);
+                    preparedStatement.setString(3, nationalNumber);
 
-                        preparedStatement.executeUpdate();
+                    preparedStatement.executeUpdate();
 
-                        try (ResultSet rs = preparedStatement.getGeneratedKeys()) {
-                            if (rs.next()) {
-                                id = rs.getInt(1);
-                            }
+                    try (ResultSet rs = preparedStatement.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            id = rs.getInt(1);
                         }
                     }
-                    return "SignUp Successful !!! " + permissions + "! " + id;
                 }
-                return "Connection error !!! ";
-            } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                e.printStackTrace();
-                return "SignUp failed due to an unexpected error.";
+                return "SignUp Successful !!! " + permissions + "! " + id;
             }
+            return "Connection error !!! ";
+        } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            return "SignUp failed due to an unexpected error.";
         }
-        return "Not Permissions";
+
     }
 
     public String updateInformation(String newPhone, String newAddress, String newAge) {
@@ -195,7 +175,7 @@ public class ConnectToDatabase {
                 try (ResultSet updatedUser = selectStatement.executeQuery()) {
                     if (updatedUser.next()) {
                         return "Update Information Successful !!! " + "id : " + id +
-                                ", Project And Description: " + updatedUser.getString("practicalprojects").split(":");
+                                ", Project And Description: " + updatedUser.getString("practicalprojects");
                     } else {
                         return "No user found with ID: " + id;
                     }
@@ -207,6 +187,41 @@ public class ConnectToDatabase {
         } catch (SQLException throwable) {
             throwable.printStackTrace();
             return "Update Information failed !!! " + "id : " + id;
+        }
+    }
+
+    public String setMark(String name, String mark) {
+        try (Connection connection = this.connect();
+                PreparedStatement updateStatement = connection.prepareStatement(
+                        "UPDATE users SET mark=? WHERE name=?");
+                PreparedStatement selectStatement = connection.prepareStatement(
+                        "SELECT * FROM `users` WHERE name=?")) {
+
+            // Update user information
+            updateStatement.setString(1, mark); // Set the mark in the first placeholder
+            updateStatement.setString(2, name); // Set the name in the second placeholder
+
+            int affectedRows = updateStatement.executeUpdate();
+
+            if (affectedRows > 0) {
+                // If update was successful, retrieve updated user information
+                selectStatement.setString(1, name);
+                try (ResultSet updatedUser = selectStatement.executeQuery()) {
+                    if (updatedUser.next()) {
+                        return "Set Mark Successful !!! " +
+                                "Name : " + updatedUser.getString("name") +
+                                ", Project Mark's: " + updatedUser.getString("mark");
+                    } else {
+                        return "No user found with Name : " + name;
+                    }
+                }
+            } else {
+                return "No user found with Name : " + name;
+            }
+
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+            return "Update Information failed for user : " + name;
         }
     }
 

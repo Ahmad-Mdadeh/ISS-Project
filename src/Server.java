@@ -19,7 +19,6 @@ class Server {
 			server = new ServerSocket(1234);
 			server.setReuseAddress(true);
 
-
 			// running infinite loop for getting client request
 			while (true) {
 
@@ -59,6 +58,8 @@ class Server {
 		private String symmetricKey;
 		PrintWriter printWriterOut;
 		SecretKey sessionKey;
+		static byte[] digitalSignature;
+		PublicKey publicKeyFromClient;
 
 		// Constructor
 		public ClientHandler(Socket socket) {
@@ -70,6 +71,7 @@ class Server {
 			ObjectInputStream inObj = null;
 			BufferedReader encryptTypeIn = null;
 			PrintStream printStream = null;
+
 			try {
 				String response = "";
 				ArrayList<String> received, decrypt = new ArrayList<>();
@@ -96,20 +98,33 @@ class Server {
 					switch (this.encryptType) {
 						case "symmetric":
 							decrypt = operation.decrypt(received, SymmetricCryptography.createAESKey(symmetricKey));
+							operation.getRequest(decrypt);
+							response = operation.insertIntoDataBase();
 							break;
 						case "pgp":
-
 							decrypt = operation.decrypt(received, sessionKey);
+							operation.getRequest(decrypt);
+							response = operation.insertIntoDataBase();
+							break;
+						case "signature":
+							digitalSignature = (byte[]) inObj.readObject();
+							decrypt = operation.decrypt(received, sessionKey);
+							if (verifingSginature(received)) {
+								operation.getRequest(decrypt);
+								response = operation.insertIntoDataBase();
+							} else {
+								response = "Digital Signature is invaled !!";
+							}
 							break;
 						case "no":
 							decrypt = received;
+							operation.getRequest(decrypt);
+							response = operation.insertIntoDataBase();
 							break;
 						default:
 							break;
 					}
 
-					operation.getRequest(decrypt);
-					response = operation.auth();
 					if (response.contains("Successful")) {
 						String[] resParts = response.split("! ");
 						printStream.println(resParts[0]);
@@ -139,9 +154,14 @@ class Server {
 			}
 		}
 
+		private boolean verifingSginature(ArrayList<String> received) throws Exception {
+			return DigitalSignature.verifyingDigitalSignature(received, digitalSignature,
+					publicKeyFromClient);
+		}
+
 		private void getEncryptedSessionKey(ObjectInputStream inObj) throws Exception {
 
-			PublicKey publicKeyFromClient = (PublicKey) inObj.readObject();
+			publicKeyFromClient = (PublicKey) inObj.readObject();
 
 			// generateSessionKey
 			sessionKey = SymmetricCryptography.GenerateSessionKey();
@@ -149,7 +169,7 @@ class Server {
 			System.out.println("-------------------------------------------------------------------------");
 
 			System.out.println(
-					"The Server's Session Key is : " + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
+					"The Server's Session Key is:\n" + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
 
 			byte[] encryptedSessionKey = KeyGenerator.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
 					publicKeyFromClient);
@@ -157,7 +177,7 @@ class Server {
 			System.out.println("-------------------------------------------------------------------------");
 
 			System.out.println(
-					"The Server's Encrypted Session Key is : " + DatatypeConverter.printHexBinary(encryptedSessionKey));
+					"The Server's Encrypted Session Key is:\n" + DatatypeConverter.printHexBinary(encryptedSessionKey));
 
 			System.out.println("-------------------------------------------------------------------------");
 
