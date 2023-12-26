@@ -23,7 +23,6 @@ class Client {
 
 	// driver code
 	public Client(String address, int port) {
-
 		try {
 
 			// creating an object of socket
@@ -74,7 +73,6 @@ class Client {
 				return;
 			}
 
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -95,8 +93,9 @@ class Client {
 		keyPair = KeyGenerator.generateKeyPair();
 
 		// Send the public Key to client
-		 publicKey = keyPair.getPublic();
+		publicKey = keyPair.getPublic();
 		privateKey = keyPair.getPrivate();
+		
 
 		objectOut.writeObject(publicKey);
 

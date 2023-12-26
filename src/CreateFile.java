@@ -1,35 +1,73 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Date;
+import java.util.Scanner;
 
 public class CreateFile {
+    static String publicKeyString;
+    static String privetKeyString;
+    static String fileName;
 
-    public static void createFile() {
+    static public void createFile(String id) {
         try {
-            FileWriter myWriter = new FileWriter("KeyPair.txt");
-            myWriter.write("Files in Java might be tricky, but it is fun enough!");
+            // Generate a unique filename based on the current timestamp
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+            fileName = "Client_" + timestamp + ".txt";
+
+            File myObj = new File(fileName);
+            myObj.createNewFile();
+
+            FileWriter myWriter = new FileWriter(fileName);
+            myWriter.write(id + System.lineSeparator());
+            myWriter.write(publicKeyString + System.lineSeparator());
+            myWriter.write(privetKeyString + System.lineSeparator());
+
             myWriter.close();
-            System.out.println("Successfully wrote to the file.");
+
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
     }
 
-    public static String publicKeyToString(PublicKey publicKey) {
+    public static void publicKeyToString(PublicKey publicKey) {
         byte[] publicKeyBytes = publicKey.getEncoded();
-        return base64Encode(publicKeyBytes);
+        publicKeyString = base64Encode(publicKeyBytes);
+
     }
 
-    public static String privateKeyToString(PrivateKey privateKey) {
+    public static void privateKeyToString(PrivateKey privateKey) {
         byte[] privateKeyBytes = privateKey.getEncoded();
-        return base64Encode(privateKeyBytes);
+        privetKeyString = base64Encode(privateKeyBytes);
     }
 
     private static String base64Encode(byte[] data) {
         return Base64.getEncoder().encodeToString(data);
+    }
+
+    public static void main(String[] args) {
+        try {
+            File myObj = new File("Client_2023-12-25-16-24-10.txt");
+            Scanner myReader = new Scanner(myObj);
+
+            // Read and print each line in the file
+            while (myReader.hasNextLine()) {
+                String data = myReader.nextLine();
+                System.out.println("================================");
+                System.out.println(data);
+            }
+
+            myReader.close(); // Close the scanner
+
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 
 }
