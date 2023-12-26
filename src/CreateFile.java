@@ -3,9 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.*;
-import java.text.SimpleDateFormat;
 import java.util.Base64;
-import java.util.Date;
 import java.util.Scanner;
 
 public class CreateFile {
@@ -16,16 +14,17 @@ public class CreateFile {
     static public void createFile(String id) {
         try {
             // Generate a unique filename based on the current timestamp
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
-            fileName = "Client_" + timestamp + ".txt";
+            // String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new
+            // Date());
+            // fileName = "Client_" + id + timestamp + ".txt";
 
-            File myObj = new File(fileName);
-            myObj.createNewFile();
+            // File myObj = new File("Client_");
+            // myObj.createNewFile();
 
-            FileWriter myWriter = new FileWriter(fileName);
+            FileWriter myWriter = new FileWriter("Client_", true);
             myWriter.write(id + System.lineSeparator());
             myWriter.write(publicKeyString + System.lineSeparator());
-            myWriter.write(privetKeyString + System.lineSeparator());
+            myWriter.write(privetKeyString + System.lineSeparator() + System.lineSeparator());
 
             myWriter.close();
 

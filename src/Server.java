@@ -60,6 +60,10 @@ class Server {
 		SecretKey sessionKey;
 		static byte[] digitalSignature;
 		PublicKey publicKeyFromClient;
+		OutputStream outObj = null;
+		ObjectInputStream inObj = null;
+		BufferedReader encryptTypeIn = null;
+		PrintStream printStream = null;
 
 		// Constructor
 		public ClientHandler(Socket socket) {
@@ -67,10 +71,6 @@ class Server {
 		}
 
 		public void run() {
-			OutputStream outObj = null;
-			ObjectInputStream inObj = null;
-			BufferedReader encryptTypeIn = null;
-			PrintStream printStream = null;
 
 			try {
 				String response = "";
@@ -82,8 +82,6 @@ class Server {
 				encryptTypeIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 				printStream = new PrintStream(outObj);
 				printWriterOut = new PrintWriter(clientSocket.getOutputStream(), true);
-
-				getEncryptedSessionKey(inObj);
 
 				while (true) {
 					this.encryptType = encryptTypeIn.readLine();
@@ -120,26 +118,35 @@ class Server {
 							decrypt = received;
 							operation.getRequest(decrypt);
 							response = operation.insertIntoDataBase();
+							getEncryptedSessionKey();
 							break;
 						default:
 							break;
 					}
-
+					
+					
 					if (response.contains("Successful")) {
 						String[] resParts = response.split("! ");
 						printStream.println(resParts[0]);
 						printStream.println(resParts[1]);
 						if (3 <= resParts.length) {
 							this.symmetricKey = resParts[2];
+							System.out.println("=============================");
+							System.out.println(resParts[3]);
+							printStream.println(resParts[3]);
+							System.out.println("=============================");
+
 						}
 						System.out.print("Permission : ");
 						System.out.println(resParts[1]);
 
 					} else {
 						printStream.println(response);
-						printStream.println("-1");
+						printStream.println("Permission");
+						printStream.println("id");
 						System.out.println(response);
 					}
+					
 					received.clear();
 					decrypt.clear();
 				}
@@ -149,9 +156,8 @@ class Server {
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();
-			} finally {
-
 			}
+
 		}
 
 		private boolean verifingSginature(ArrayList<String> received) throws Exception {
@@ -159,7 +165,7 @@ class Server {
 					publicKeyFromClient);
 		}
 
-		private void getEncryptedSessionKey(ObjectInputStream inObj) throws Exception {
+		private  void getEncryptedSessionKey() throws Exception {
 
 			publicKeyFromClient = (PublicKey) inObj.readObject();
 

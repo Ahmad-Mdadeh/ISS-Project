@@ -87,6 +87,7 @@ public class InformationUpdater {
         System.out.println("Request sent!!");
         System.out.println("-------------------------------------------------------------------------");
         objectOut.writeObject(encryptedRequest);
+        
         // get plain response
         response = in.readLine();
         System.out.println("Server replied ===> " + response);

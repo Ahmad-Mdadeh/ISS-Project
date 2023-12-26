@@ -63,7 +63,7 @@ public class ConnectToDatabase {
                         nationalNumber = user.getString("nationalNumber");
                         permissions = user.getString("permissions");
                         return "Login Successful !!! " + permissions + "! " + nationalNumber + "! " + user.getInt("id")
-                                + " : "
+                                + "! "
                                 + user.getString("name");
                     } else {
                         return "Wrong Password";
