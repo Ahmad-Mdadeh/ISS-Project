@@ -118,35 +118,33 @@ class Server {
 							decrypt = received;
 							operation.getRequest(decrypt);
 							response = operation.insertIntoDataBase();
-							getEncryptedSessionKey();
 							break;
 						default:
 							break;
 					}
-					
-					
+
 					if (response.contains("Successful")) {
 						String[] resParts = response.split("! ");
+						printStream.println(resParts[3]);
 						printStream.println(resParts[0]);
 						printStream.println(resParts[1]);
 						if (3 <= resParts.length) {
 							this.symmetricKey = resParts[2];
 							System.out.println("=============================");
 							System.out.println(resParts[3]);
-							printStream.println(resParts[3]);
 							System.out.println("=============================");
 
 						}
 						System.out.print("Permission : ");
 						System.out.println(resParts[1]);
-
+						getEncryptedSessionKey();
 					} else {
 						printStream.println(response);
 						printStream.println("Permission");
 						printStream.println("id");
 						System.out.println(response);
 					}
-					
+
 					received.clear();
 					decrypt.clear();
 				}
@@ -165,7 +163,7 @@ class Server {
 					publicKeyFromClient);
 		}
 
-		private  void getEncryptedSessionKey() throws Exception {
+		private void getEncryptedSessionKey() throws Exception {
 
 			publicKeyFromClient = (PublicKey) inObj.readObject();
 

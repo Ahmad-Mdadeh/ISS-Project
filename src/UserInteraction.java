@@ -28,6 +28,7 @@ public class UserInteraction {
     private String encryptedSessionKey;
     private String response;
     private String id;
+    private boolean isCreate = false;
 
     public UserInteraction(Socket socket, ObjectOutputStream objectOut) {
         this.socket = socket;
@@ -177,14 +178,25 @@ public class UserInteraction {
 
     private void getDecryptSessionKey() throws Exception {
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.id = in.readLine();
+        CreateFile.id = this.id;
 
-        // create Public and Private keys
-        keyPair = KeyGenerator.generateKeyPair();
+        if (!CreateFile.parseFile(this.id)) {
 
-        // Send the public Key to client
-        publicKey = keyPair.getPublic();
-        privateKey = keyPair.getPrivate();
+            // create Public and Private keys
+            keyPair = KeyGenerator.generateKeyPair();
 
+            // Send the public Key to client
+            publicKey = keyPair.getPublic();
+            privateKey = keyPair.getPrivate();
+        } else {
+            System.out.println("2222222222222222222");
+            CreateFile.id = this.id;
+            publicKey = CreateFile.getPublicKey();
+            privateKey = CreateFile.getPrivatKey();
+
+            isCreate = true;
+        }
         objectOut.writeObject(publicKey);
 
         System.out.println("-------------------------------------------------------------------------");
@@ -195,26 +207,20 @@ public class UserInteraction {
         System.out.println("The client's public key is:\n" + DatatypeConverter.printHexBinary(publicKey.getEncoded()));
         System.out.println("-------------------------------------------------------------------------");
         System.out
-                .println("The client's Private Key is:\n" + DatatypeConverter.printHexBinary(privateKey.getEncoded()));
+                .println("The client's Private Key is:\n" +
+                        DatatypeConverter.printHexBinary(privateKey.getEncoded()));
         System.out.println("-------------------------------------------------------------------------");
 
-        encryptedSessionKey = in.readLine();
-
-        System.out.println("==============");
         this.response = in.readLine();
         this.permissions = in.readLine();
-        System.out.println(response);
-        System.out.println("==============");
-        System.out.println(permissions);
-        System.out.println("==============");
-        this.id = in.readLine();
-        System.out.println(id);
+
+        encryptedSessionKey = in.readLine();
 
         System.out.println("The Server's Encrypted Session Key is:\n" +
                 encryptedSessionKey);
         System.out.println("-------------------------------------------------------------------------");
 
-        String decryptSessionKey = KeyGenerator.decrypt(encryptedSessionKey, keyPair.getPrivate());
+        String decryptSessionKey = KeyGenerator.decrypt(encryptedSessionKey, privateKey);
         byte[] decryptSessionKeyByte = DatatypeConverter.parseHexBinary(decryptSessionKey);
 
         sessionKey = new SecretKeySpec(decryptSessionKeyByte, 0, decryptSessionKeyByte.length, "AES");
@@ -226,11 +232,11 @@ public class UserInteraction {
     private void processRequest(ArrayList<String> request) throws Exception {
         ArrayList<String> encryptedRequest = new ArrayList<>();
         PrintStream printStream = new PrintStream(socket.getOutputStream());
+
         if (request.get(0).equals("signup")) {
             printStream.println("symmetric");
             symmetricKey = SymmetricCryptography.createAESKey(nationalNumber);
-            System.out.println(
-                    "The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
+            System.out.println("The Symmetric Key is : " + DatatypeConverter.printHexBinary(symmetricKey.getEncoded()));
             encryptedRequest = SymmetricCryptography.encryptAES(request, symmetricKey);
             System.out.println("-------------------------------------------------------------------------");
 
@@ -240,20 +246,23 @@ public class UserInteraction {
         }
 
         objectOut.writeObject(encryptedRequest);
+
         getDecryptSessionKey();
 
         System.out.println("request sent !!");
         System.out.println("-------------------------------------------------------------------------");
         System.out.println("Server replied ===> " + response);
-        
+
         if (!response.contains("Successful")) {
             System.out.println("-------------------------------------------------------------------------");
             System.out.println("Please Try Again");
             startInteraction();
         } else {
-            CreateFile.publicKeyToString(publicKey);
-            CreateFile.privateKeyToString(privateKey);
-            CreateFile.createFile(id);
+            if (!isCreate) {
+                CreateFile.publicKeyToString(publicKey);
+                CreateFile.privateKeyToString(privateKey);
+                CreateFile.createFile();
+            }
         }
 
     }
