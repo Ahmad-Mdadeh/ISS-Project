@@ -12,7 +12,6 @@ class Client {
 	private ObjectOutputStream objectOut = null;
 	private Socket socket = null;
 	SecretKey sessionKey = null;
-	PublicKey publicKeyFromServer = null;
 	byte[] encryptedSessionKey = null;
 	String permissions = "";
 	BufferedReader in;
@@ -28,7 +27,6 @@ class Client {
 
 			// creating an object of socket
 			socket = new Socket(address, port);
-
 			System.out.println("Connection Established!! ");
 
 			// opening output stream on the socket
@@ -37,9 +35,8 @@ class Client {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			getDecryptSessionKey();
-
 			// UserInteraction
-			UserInteraction userInteraction = new UserInteraction(socket, objectOut);
+			UserInteraction userInteraction = new UserInteraction(socket, objectOut,keyPair);
 			userInteraction.startInteraction();
 
 			System.out.println("-------------------------------------------------------------------------");
@@ -52,7 +49,6 @@ class Client {
 				MarkEntryStudent markEntryStudent = new MarkEntryStudent(socket, objectOut, sessionKey, privateKey);
 				markEntryStudent.setMark();
 			}
-
 			// InformationUpdater
 			InformationUpdater informationUpdater = new InformationUpdater(socket,
 					objectOut);

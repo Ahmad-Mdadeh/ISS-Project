@@ -1,7 +1,9 @@
 import java.io.*;
 import java.net.*;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
@@ -60,6 +62,7 @@ class Server {
 		SecretKey sessionKey;
 		static byte[] digitalSignature;
 		PublicKey publicKeyFromClient;
+		byte[] encryptedSessionKey;
 
 		// Constructor
 		public ClientHandler(Socket socket) {
@@ -75,7 +78,7 @@ class Server {
 			try {
 				String response = "";
 				ArrayList<String> received, decrypt = new ArrayList<>();
-
+				ArrayList<String> received1 = new ArrayList<>();
 				// get the outputstream of client
 				outObj = clientSocket.getOutputStream();
 				inObj = new ObjectInputStream(clientSocket.getInputStream());
@@ -85,6 +88,7 @@ class Server {
 
 				getEncryptedSessionKey(inObj);
 
+				String csr = "-1";
 				while (true) {
 					this.encryptType = encryptTypeIn.readLine();
 
@@ -94,7 +98,7 @@ class Server {
 					received = (ArrayList<String>) inObj.readObject();
 
 					Operation operation = new Operation();
-
+					boolean status;
 					switch (this.encryptType) {
 						case "symmetric":
 							decrypt = operation.decrypt(received, SymmetricCryptography.createAESKey(symmetricKey));
@@ -117,23 +121,62 @@ class Server {
 							}
 							break;
 						case "no":
-							decrypt = received;
-							operation.getRequest(decrypt);
-							response = operation.insertIntoDataBase();
+							// ######################################
+							if (received.get(0).equals("request")) {
+								new DigitalCertificate(printStream, encryptTypeIn);
+								System.out.println("request certificate:");
+								System.out.println(received.get(1));
+								System.out.println("--------------------------------------------------");
+								String privateKeyString = DigitalCertificate.readFileContent("ServerPrivateKey.txt");
+								PrivateKey privateKey = DigitalCertificate.convertStringToPrivateKey(privateKeyString);
+								String message = DigitalCertificate.VerificationFromCSR(received.get(1), privateKey);
+								System.out.println("new certificat is:");
+								System.out.println(message);
+								printStream.println(message);
+								System.out.println("--------------------------------------------------");
+								csr = encryptTypeIn.readLine();
+								if(message.contains("warning::")){
+									decrypt = (ArrayList<String>) inObj.readObject();
+									status =false;
+								}else{
+									// receiv certificate
+									System.out.println("received certificate:");
+									System.out.println(csr);
+									System.out.println("--------------------------------------------------");
+									decrypt = E(csr,inObj);
+									status =true;
+								}
+							} else {
+								// receiv certificate
+								System.out.println("received certificate:");
+								System.out.println(received.get(0));
+								csr = received.get(0);
+								System.out.println("--------------------------------------------------");
+								decrypt = E(csr,inObj);
+								status =true;
+							}
+							// ######################################
+							if(status){
+								System.out.println(decrypt);
+								operation.getRequest(decrypt);
+								response = operation.insertIntoDataBase();
+							}else{
+								response = "client dont have certificate";
+							}
+							
 							break;
 						default:
 							break;
 					}
-
 					if (response.contains("Successful")) {
 						String[] resParts = response.split("! ");
 						printStream.println(resParts[0]);
-						printStream.println(resParts[1]);
+						printStream.println(permissions(csr));
 						if (3 <= resParts.length) {
 							this.symmetricKey = resParts[2];
 						}
 						System.out.print("Permission : ");
-						System.out.println(resParts[1]);
+						System.out.println(permissions(csr));
 
 					} else {
 						printStream.println(response);
@@ -171,7 +214,7 @@ class Server {
 			System.out.println(
 					"The Server's Session Key is:\n" + DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
 
-			byte[] encryptedSessionKey = KeyGenerator.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
+			encryptedSessionKey = KeyGenerator.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()),
 					publicKeyFromClient);
 
 			System.out.println("-------------------------------------------------------------------------");
@@ -185,5 +228,52 @@ class Server {
 			printWriterOut.println(DatatypeConverter.printHexBinary(encryptedSessionKey));
 		}
 
+		private ArrayList<String> E(String csr,ObjectInputStream inObj)throws Exception{
+			ArrayList<String> received1, decrypt;
+			String publicKeyString = DigitalCertificate.readFileContent("ServerPublicKey.txt");
+			PublicKey publicKey = DigitalCertificate.convertStringToPublicKey(publicKeyString);
+			String[] InfoCsr = csr.split("\\|");
+			Boolean certificateSignatureIs = DigitalCertificate.verifyDigitalSignature(
+							InfoCsr[0] + "|" + InfoCsr[1] + "|" + InfoCsr[2] + "|", InfoCsr[3], publicKey);
+			System.out.println("certificate signature is:" + certificateSignatureIs);
+			if (certificateSignatureIs == true) 
+			{
+				String publicKeyClientString = InfoCsr[2];
+				PublicKey publicKeyClient = DigitalCertificate.convertStringToPublicKey(publicKeyClientString);
+				byte[] encrept = KeyGenerator.encrept(DatatypeConverter.printHexBinary(sessionKey.getEncoded()), publicKeyClient);
+				System.out.println("sesion key:");
+				System.out.println(DatatypeConverter.printHexBinary(sessionKey.getEncoded()));
+				System.out.println("--------------------------------------------------");
+				System.out.println("encrept sesion key:");
+				System.out.println(DatatypeConverter.printHexBinary(encrept));
+				printWriterOut.println(DatatypeConverter.printHexBinary(encrept));
+				System.out.println("--------------------------------------------------");
+				received1 = (ArrayList<String>) inObj.readObject();
+				decrypt = SymmetricCryptography.decryptAES(received1, sessionKey);	
+			} else
+			{
+				printWriterOut.println("warning:: the certificate is error");
+				decrypt = null;
+			}
+			return decrypt;
+		}
+		
+		private String permissions(String csr) throws SQLException{
+			
+			String permissions;
+			if(!csr.equals("-1")){
+				String[] InfoCsr = csr.split("\\|");
+				if(InfoCsr[1].equals("d")){
+					permissions = "1";
+				}else if(InfoCsr[1].equals("a")){
+					permissions = "0";
+				}else{
+					permissions = "2";
+				}
+			}else{
+				permissions = "-1";
+			}		
+			return permissions;
+		}
 	}
 }

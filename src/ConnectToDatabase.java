@@ -51,14 +51,17 @@ public class ConnectToDatabase {
 
     public String login(String name, String pass, String nationalNumber) {
 
+        
+
         try (Connection connection = this.connect();
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM `users` WHERE name=?")) {
-
+                
             statement.setString(1, name);
 
             try (ResultSet user = statement.executeQuery()) {
                 if (user.next()) {
-                    if (VerifyingPasswords.validatePassword(pass, user.getString("pass"))) {
+                    if (VerifyingPasswords.validatePassword(pass, user.getString("pass"))&&
+                    nationalNumber.equals(user.getString("nationalNumber"))) {
                         id = user.getInt("id");
                         nationalNumber = user.getString("nationalNumber");
                         permissions = user.getString("permissions");
@@ -66,7 +69,7 @@ public class ConnectToDatabase {
                                 + " : "
                                 + user.getString("name");
                     } else {
-                        return "Wrong Password";
+                        return "Wrong Password or Wrong nationalNumber";
                     }
                 } else {
                     return "User not found";
